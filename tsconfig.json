@@ -18,9 +18,16 @@
       }
     ],
     "paths": {
-      "@/*": ["./src/*"]
+      "@/*": ["./*"]
     }
   },
-  "include": ["next-env.d.ts", "**/*.ts", "**/*.tsx", ".next/types/**/*.ts"],
-  "exclude": ["node_modules"]
+  "include": ["next-env.d.ts", "**/*.ts", "**/*.tsx", ".next/types/**/*.ts", 
+  "./src/typings/*.d.ts", "./src/database/typings/*.d.ts"],
+  "exclude": ["node_modules"],
+	"ts-node": {
+		"files": true
+	},
+	"files": [
+    "./src/database/typings/db.d.ts"
+	]
 }
