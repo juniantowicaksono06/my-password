@@ -3,7 +3,7 @@ import { useSearchParams  } from 'next/navigation'
 import { useEffect, useState } from 'react';
 import Loading from '@/src/components/Loading/Loading';
 
-const callbackPage = () => {
+const CallbackPage = () => {
     const urlParams = useSearchParams();
     const code = urlParams.get('code');
     const state = urlParams.get('state');
@@ -39,4 +39,4 @@ const callbackPage = () => {
     </>
 }
 
-export default callbackPage
+export default CallbackPage;
