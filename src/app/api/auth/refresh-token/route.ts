@@ -37,8 +37,8 @@ export async function POST(req: Request, res: Response) {
         const refreshTokenDB = await userTokenCollection.findOne({
             token: data['refreshToken']
         });
+        var accessToken = "";
         if(refreshTokenDB) {
-            var accessToken = "";
             var tokenHandler = new TokenHandler();
             tokenHandler.init(null, data['refreshToken']);
             if(!(await tokenHandler.validateRefresh(false))) {
