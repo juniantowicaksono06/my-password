@@ -5,21 +5,23 @@ import "../assets/css/globals.css";
 import '../assets/css/satoshi.css';
 import { headers } from 'next/headers';
 import type { Metadata } from "next";
-import jwt from 'jsonwebtoken';
+import TokenHandler from '../shared/TokenHandler';
 async function getProfile() {
+  const headerList = headers();
   const cookieStore = cookies();
   const encryptAccessToken = cookieStore.get("accessToken");
   if(encryptAccessToken === undefined) {
-      return null;
+      return undefined;
   }
-  const accessTCrypto = new NextCrypto(process.env.SECRET_KEY as string);
-  const accessToken = await accessTCrypto.decrypt(encryptAccessToken.value);
-  const token = jwt.verify(accessToken as string, process.env.JWT_SECRET_KEY as string);
-  const {data} = token as {
-    exp: number,
-    data: Forms.IUserData
-  };
-  return data;
+  try {
+    const verifyToken = new TokenHandler();
+    verifyToken.init();
+    await verifyToken.validate();
+    let accessToken = verifyToken.getAccessPayload() as Forms.IUserData;
+    return accessToken;
+  } catch (error) {
+    return undefined;
+  }
 }
 
 export const metadata: Metadata = {
@@ -28,7 +30,7 @@ export const metadata: Metadata = {
   generator: "Next.js",
   manifest: "/manifest.json",
   keywords: ["nextjs", "nextjs13", "next13", "pwa", "next-pwa"],
-  themeColor: [{ media: "(prefers-color-scheme: dark)", color: "#fff" }],
+  // themeColor: [{ media: "(prefers-color-scheme: dark)", color: "#fff" }],
   authors: [
     { name: "Junianto Ichwan Dwi Wicaksono" },
     {
@@ -39,8 +41,8 @@ export const metadata: Metadata = {
   viewport:
     "minimum-scale=1, initial-scale=1, width=device-width, shrink-to-fit=no, viewport-fit=cover",
   icons: [
-    { rel: "apple-touch-icon", url: "icons/icon-128x128.png" },
-    { rel: "icon", url: "icons/icon-128x128.png" },
+    { rel: "apple-touch-icon", url: "/icons/icon-128x128.png" },
+    { rel: "icon", url: "/icons/icon-128x128.png" },
   ],
 }
 
@@ -54,15 +56,22 @@ export default async function RootLayout({
       import('@/src/components/MainLayout/MainLayout'), {
         ssr: true
       }
-    )
-    const headerList = headers()
-    const pathname = headerList.get('x-current-path')
+    );
+    const LoadingProvider = dynamic(() => 
+      import('@/src/components/MainLayout/LoadingProvider'), {
+        ssr: true
+      }
+    );
+    const headerList = headers();
+    const pathname = headerList.get('x-current-path');
     return <>
       <html>
         <body className="">
-          <MainLayout profile={profile}>
-            {children}
-          </MainLayout>
+          <LoadingProvider>
+            <MainLayout profile={profile}>
+              {children}
+            </MainLayout>
+          </LoadingProvider>
         </body>
       </html>
     </>

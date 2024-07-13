@@ -1,7 +1,8 @@
 
-import { ConnectDB, userTokenCollection } from "@/src/database";
+import { ConnectDB, userTokenCollection, userCollection } from "@/src/database";
+import TokenHandler from "@/src/shared/TokenHandler";
 import Joi from "@hapi/joi";
-import jwt from 'jsonwebtoken';
+import { SignJWT } from "jose";
 
 
 export async function POST(req: Request, res: Response) {
@@ -9,15 +10,24 @@ export async function POST(req: Request, res: Response) {
     const schema = Joi.object({
         refreshToken: Joi.string().required().label("Refresh Token")
     })
-    let data: {
-        refreshToken: string
-    } = await req.json();
+    try {
+        var data: {
+            refreshToken: string
+        } = await req.json();
 
-    const {error, value} = schema.validate(data)
-    if (error) {
+        const {error, value} = schema.validate(data)
+        if (error) {
+            return Response.json({
+                code: 400,
+                message: error.details.map(i => i.message).join(',')
+            }, {
+                status: 400
+            });
+        }
+    } catch (error) {
         return Response.json({
             code: 400,
-            message: error.details.map(i => i.message).join(',')
+            message: "No input provided"
         }, {
             status: 400
         });
@@ -29,30 +39,46 @@ export async function POST(req: Request, res: Response) {
         });
         if(refreshTokenDB) {
             var accessToken = "";
-            jwt.verify(data['refreshToken'], process.env.JWT_REFRESH_KEY as string, (err, tokenDetails) => {
-                if(err) {
-                    return Response.json({
-                        code: 403,
-                        message: "Refresh token is invalid"
-                    }, {
-                        status: 200
-                    });
-                }
-                const details = tokenDetails as {
-                    exp: number,
-                    data: {
-                        username: string,
-                        fullname: string,
-                        userStatus: number,
-                        picture?: string
-                    }
-                };
-                accessToken = jwt.sign({
-                    exp: Math.floor(Date.now() / 1000) + (60 * 60 * 24),
-                    data: {...details['data']}
-                }, process.env.JWT_SECRET_KEY as string);
-                
+            var tokenHandler = new TokenHandler();
+            tokenHandler.init(null, data['refreshToken']);
+            if(!(await tokenHandler.validateRefresh(false))) {
+                throw new Error("Refresh token is invalid");
+            }
+            const refreshPayload= tokenHandler.getRefreshPayload() as Forms.IUserData;
+            const userID = refreshPayload['userID'];
+            const user = await userCollection.findOne({
+                _id: userID
             });
+            if(user == null) {
+                return Response.json({
+                    code: 404,
+                    message: "User is not found!"
+                }, {
+                    status: 200
+                });
+            }
+            if(user['userStatus'] != 1) {
+                return Response.json({
+                    code: 403,
+                    message: "User is not active"
+                }, {
+                    status: 200
+                });
+            }
+            const accessSecretKey = new TextEncoder().encode(process.env.JWT_SECRET_KEY as string);
+            const accessToken = await new SignJWT({
+                userID: userID,
+                fullname: user['fullname'],
+                email: user['email'],
+                userStatus: user['userStatus'],
+                picture: user['picture'] == undefined ? "" : user['picture']
+            }).setProtectedHeader({
+                alg: 'HS256',
+                typ: 'JWT'
+            })
+            .setIssuedAt()
+            .setExpirationTime('24h')
+            .sign(accessSecretKey);
             return Response.json({
                 code: 200,
                 data: {

@@ -1,9 +1,12 @@
 "use client"
 import React, { useEffect, useRef, useState } from 'react';
-import SidebarLinkGroup from './SidebarLinkGroup';
 import { usePathname } from 'next/navigation';
 import Link from 'next/link';
 import Logo from '@/public/logo/logo-no-background.png';
+import Swal from 'sweetalert2';
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import * as FaSolid from '@fortawesome/free-solid-svg-icons';
+import { useLoading } from '../MainLayout/LoadingProvider';
 
 interface SidebarProps {
   sidebarOpen: boolean;
@@ -11,11 +14,44 @@ interface SidebarProps {
 }
 
 const Sidebar = ({ sidebarOpen, setSidebarOpen }: SidebarProps) => {
+  const {state, dispatch} = useLoading();
   const pathname = usePathname();
   // const { pathname } = location;
 
   const trigger = useRef<any>(null);
   const sidebar = useRef<any>(null);
+  const [menu, setMenu] = useState([] as AppType.IAppMenu[]);
+  const [sidebarLoaded, setSidebarLoaded] = useState(false);
+  const getMenus = async() => {
+      dispatch({type: 'startLoading'});
+      const response = await fetch(`${window.location.origin}/api/menu`, {
+        method: "GET"
+      });
+      dispatch({type: 'stopLoading'});
+      if(response.ok) {
+        const result = await response.json() as {
+          code: number,
+          data: AppType.IAppMenu[]
+        };
+        if(result.code == 200) {
+          setMenu(result.data);
+          setSidebarLoaded(true);
+        }
+      }
+      else {
+        Swal.fire({
+          title: "Error",
+          text: "Something went wrong!",
+          icon: "error",
+          confirmButtonText: "Ok"
+        })
+        return false;
+      }
+      return true;
+  }
+  useEffect(() => {
+      getMenus();
+  }, [])
 
   const [sidebarExpanded, setSidebarExpanded] = useState<boolean|null>(null);
   // const [logo, setLogo] = useState('');
@@ -59,6 +95,26 @@ const Sidebar = ({ sidebarOpen, setSidebarOpen }: SidebarProps) => {
             />
           </svg>
         </button>
+      </div>
+      <div className="no-scrollbar flex flex-col overflow-y-auto duration-300 ease-linear">
+        <nav className="mt-5 py-4 lg:mt-9 lg:px-6">
+          <div>
+            <h3 className="mb-4 ml-4 text-sm font-semibold text-bodydark2">MENU</h3>
+            <ul className="mb-6 flex flex-col gap-1.5">
+              {menu.map((item, index) => {
+                const icon = FaSolid[item.icon as keyof typeof FaSolid] as FaSolid.IconDefinition;
+                return <li key={item._id.toString()}>
+                <Link href={item.link} className='group relative flex items-center gap-2.5 rounded-sm py-2 px-4 font-medium text-bodydark1 duration-300 ease-in-out hover:bg-graydark dark:hover:bg-meta-4'>
+                  <span className='mr-3'>
+                    <FontAwesomeIcon icon={icon} />
+                  </span>
+                  {item.name}
+                </Link>
+              </li>
+              })}
+            </ul>
+          </div>
+        </nav>
       </div>
     </aside>
   );

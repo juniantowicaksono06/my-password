@@ -1,23 +1,30 @@
 import { useEffect, useRef, useState } from 'react';
 import Link from 'next/link';
+import Skeleton, {SkeletonTheme} from 'react-loading-skeleton';
+import 'react-loading-skeleton/dist/skeleton.css';
 
 // import UserOne from '../../images/user/user-01.png';
 
 const DropdownUser = (props: {
-  profile: null | Forms.IUserData
+  profile: undefined | Forms.IUserData
 }) => {
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const [profilePicture, setProfilePicture] = useState('');
+  const [imageLoaded, setImageLoaded] = useState(false);
 
   const trigger = useRef<any>(null);
   const dropdown = useRef<any>(null);
 
-  // close on click outside
+  const loadImage = async () => {
+    const response = await fetch(`${props.profile?.picture}`);
+    if(response.ok) {
+      setImageLoaded(true);
+    }
+  }
+
   useEffect(() => {
     setProfilePicture(`${props.profile?.picture}`);
-    if(!(props.profile?.picture as string).startsWith('http')) {
-      setProfilePicture(`${window.location.href}/${props.profile?.picture}`)
-    }
+    loadImage();
     const clickHandler = ({ target }: MouseEvent) => {
       if (!dropdown.current) return;
       if (
@@ -60,7 +67,14 @@ const DropdownUser = (props: {
         </span>
 
         <span className="h-12 w-12 rounded-full">
-          {profilePicture == "" ? <></> : <img src={`${profilePicture}`} alt="User Profile Picture" className="rounded-full" />
+          {
+            !imageLoaded ? <SkeletonTheme>
+              <Skeleton
+                height={48}
+                width={48}
+                circle
+              />
+            </SkeletonTheme> : profilePicture == "" ? <></> : <img src={`${profilePicture}`} alt="User Profile Picture" className="rounded-full" />
           }
         </span>
 
@@ -91,7 +105,16 @@ const DropdownUser = (props: {
         }`}
       >
         <div className="px-8">
-          {profilePicture == "" ? <></> : <img src={`${profilePicture}`} alt="User Profile Picture" className="rounded-full" />
+          {/* {profilePicture == "" ? <></> : <img src={`${profilePicture}`} alt="User Profile Picture" className="rounded-full" />
+          } */}
+          {
+            !imageLoaded ? <SkeletonTheme>
+              <Skeleton
+                height={185}
+                width={185}
+                circle
+              />
+            </SkeletonTheme> : profilePicture == "" ? <></> : <img src={`${profilePicture}`} alt="User Profile Picture" className="rounded-full" />
           }
         </div>
         <div className='mt-5 mb-2'>

@@ -33,7 +33,7 @@ export async function POST(req: Request, res: Response) {
         catch(error) {
             return Response.json({
                 code: 400,
-                message: "Bad request: Input is Required"
+                message: "No input provided"
             });
         }
         const {error, value} = schema.validate(data)

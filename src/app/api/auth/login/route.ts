@@ -3,7 +3,8 @@ import Joi from "@hapi/joi";
 import NextCrypto from 'next-crypto';
 import { ConnectDB, userCollection, userTokenCollection } from '@/src/database';
 import { compare } from 'bcrypt';
-import jwt from 'jsonwebtoken';
+import { SignJWT } from 'jose';
+import { encryptStringV2 } from '@/src/shared/function';
 
 /**
  * Handles the POST request for user login, validates user credentials, generates access and refresh tokens, and sets cookies.
@@ -57,38 +58,49 @@ export async function POST(req: Request, res: Response) {
                 });
             }
             if(await compare(data['password'] as string, user['password'] as string)) {
-                const accessCrypto = new NextCrypto(process.env.SECRET_KEY as string);
-                const refreshCrypto = new NextCrypto(process.env.REFRESH_KEY as string);
 
                 const accessTokenValid = Math.floor(Date.now() / 1000) + (60 * 60 * 24);
                 const refreshTokenValid = Math.floor(Date.now() / 1000) + 2592000;
                 const date2 = new Date(refreshTokenValid * 1000);
-                const refreshTokenValidDate1 = `${date2.getFullYear()}-${String(date2.getMonth() + 1).padStart(2, '0')}-${String(date2.getDate()).padStart(2, '0')} ${String(date2.getHours() + 1).padStart(2, '0')}:${String(date2.getMinutes() + 1).padStart(2, '0')}:${String(date2.getSeconds() + 1).padStart(2, '0')}`;
-                const accessToken = jwt.sign({
-                    exp: accessTokenValid,
-                    data: {
-                        fullname: user['fullname'],
-                        email: user['email'],
-                        userStatus: user['userStatus'],
-                        picture: user['picture'] == undefined ? "" : user['picture']
-                    },
-                }, process.env.JWT_SECRET_KEY as string);
-                const refreshToken = jwt.sign({
-                    exp: refreshTokenValid,
-                    data: {
-                        fullname: user['fullname'],
-                        email: user['email'],
-                        userStatus: user['userStatus'],
-                        picture: user['picture'] == undefined ? "" : user['picture']
-                    },
-                }, process.env.JWT_REFRESH_KEY as string);
+                // const refreshTokenValidDate1 = `${date2.getFullYear()}-${String(date2.getMonth() + 1).padStart(2, '0')}-${String(date2.getDate()).padStart(2, '0')} ${String(date2.getHours() + 1).padStart(2, '0')}:${String(date2.getMinutes() + 1).padStart(2, '0')}:${String(date2.getSeconds() + 1).padStart(2, '0')}`;
+                const currentDate = new Date();
+                currentDate.setDate(currentDate.getDate() + 30);
+                const refreshTokenValidDate1 = currentDate.toDateString();
+                const accessSecretKey = new TextEncoder().encode(process.env.JWT_SECRET_KEY as string);
+                const refreshSecretKey = new TextEncoder().encode(process.env.JWT_REFRESH_KEY as string);
+                const accessToken = await new SignJWT({
+                    userID: user['_id'],
+                    fullname: user['fullname'],
+                    email: user['email'],
+                    userStatus: user['userStatus'],
+                    picture: user['picture'] == undefined ? "" : user['picture']
+                }).setProtectedHeader({
+                    alg: 'HS256',
+                    typ: 'JWT'
+                })
+                .setIssuedAt()
+                .setExpirationTime('24h')
+                .sign(accessSecretKey);
+                const refreshToken = await new SignJWT({
+                    userID: user['_id'],
+                    fullname: user['fullname'],
+                    email: user['email'],
+                    userStatus: user['userStatus'],
+                    picture: user['picture'] == undefined ? "" : user['picture'],
+                }).setProtectedHeader({
+                    alg: 'HS256',
+                    typ: 'JWT'
+                })
+                .setIssuedAt()
+                .setExpirationTime('30d')
+                .sign(refreshSecretKey);
 
                 await userTokenCollection.create({
                     token: refreshToken,
                     userID: user['_id'],
                     validDate: refreshTokenValidDate1
                 });
-                cookies().set('accessToken', await accessCrypto.encrypt(accessToken), {
+                cookies().set('accessToken', await encryptStringV2(accessToken), {
                     httpOnly: true,
                     secure: /^true$/i.test(process.env.USE_SECURE as string),
                     path: '/',
@@ -97,7 +109,7 @@ export async function POST(req: Request, res: Response) {
                     sameSite: 'strict'
                 });
                 
-                cookies().set('refreshToken', await refreshCrypto.encrypt(refreshToken), {
+                cookies().set('refreshToken', await encryptStringV2(refreshToken, process.env.REFRESH_KEY as string), {
                     httpOnly: true,
                     secure: /^true$/i.test(process.env.USE_SECURE as string),
                     path: '/',

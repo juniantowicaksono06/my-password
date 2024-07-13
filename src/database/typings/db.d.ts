@@ -18,4 +18,18 @@ namespace Database {
         token: string;
         validDate: Date;
     }
+
+    interface IAppMenu {
+        name: string;
+        icon: string;
+        link: string;
+        active: string;
+    }
+    interface IPasswords {
+        userID: Types.ObjectId;
+        title: string;
+        url?: string | null | undefined;
+        itemType?: string | null | undefined;
+        password: string;
+    }
 }

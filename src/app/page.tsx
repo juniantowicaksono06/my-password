@@ -1,6 +1,8 @@
+import Breadcrumb from "../components/Breadcrumbs/Breadcrumb";
+
 const Page = () => {
   return <>
-    <p></p>
+    <Breadcrumb pageName="Home" />
   </>
 }
 export default Page;

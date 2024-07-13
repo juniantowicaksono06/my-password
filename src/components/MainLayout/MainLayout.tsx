@@ -1,20 +1,25 @@
 "use client"
 
-import { useState } from "react";
+import React, { useState } from "react";
 import { usePathname } from "next/navigation";
-import Sidebar from "../Sidebar";
 import Header from "../Header";
+import Sidebar from "../Sidebar";
+import {useLoading } from "./LoadingProvider";
+import Loader from "../Loader/Loader";
 
 export default function MainLayout({
     children,
     profile
   }: Readonly<{
     children: React.ReactNode;
-    profile: null | Forms.IUserData;
+    profile: undefined | Forms.IUserData;
   }>) {
     const [sidebarOpen, setSidebarOpen] = useState(false);
-    const pathname = usePathname()
-    const authenticatePath = ["/auth/login", "/auth/register"]
+    const {state, dispatch} = useLoading();
+    const pathname = usePathname();
+    const authenticatePath = ["/auth/login", "/auth/register"];
+    // const Header = React.lazy(() => import("../Header"));
+    // const Sidebar = React.lazy(() => import("../Sidebar"));
     return (
         authenticatePath.includes(pathname.toLowerCase()) ?
             <div className="w-full h-full overflow-auto py-10">
@@ -22,7 +27,8 @@ export default function MainLayout({
             </div>
         :
         <>
-            <div className="dark:bg-boxdark-2 dark:text-bodydark">
+            <Loader visibility={state.loading ? "block" : "hidden"} />
+            <div className={state.loading ? "dark:bg-boxdark-2 dark:text-bodydark hidden" : "dark:bg-boxdark-2 dark:text-bodydark"}>
                 <div className="flex h-screen overflow-hidden">
                     {/* SIDEBAR */}
                     <Sidebar sidebarOpen={sidebarOpen} setSidebarOpen={setSidebarOpen} />
@@ -37,6 +43,8 @@ export default function MainLayout({
                     </div>
                 </div>
             </div>
+            {/* <Suspense fallback={<Loader />}>
+            </Suspense> */}
         </>
     )
 } 

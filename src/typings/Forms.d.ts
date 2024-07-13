@@ -1,5 +1,6 @@
 namespace Forms {
     interface IUserData {
+        userID: string;
         fullname: string;
         email: string;
         password: string;
@@ -10,5 +11,12 @@ namespace Forms {
         userActivationTokenValidDate?: Date | null | undefined;
         userResetToken?: string | null | undefined;
         userResetTokenValidDate?: Date | null | undefined;
+    }
+    interface IPasswords {
+        userID: string;
+        title: string;
+        url?: string | null | undefined;
+        itemType?: string | null | undefined;
+        password: string;
     }
 }

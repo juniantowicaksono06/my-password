@@ -4,8 +4,9 @@ import axios from 'axios';
 import {ConnectDB, userCollection, userTokenCollection} from "@/src/database";
 import { cookies } from 'next/headers';
 import {Types} from 'mongoose';
-import jwt from 'jsonwebtoken';
 import NextCrypto from 'next-crypto';
+import { SignJWT } from 'jose';
+import { encryptStringV2 } from "@/src/shared/function";
 
 export async function POST(req: Request, res: Response) {
     const schema = Joi.object({
@@ -66,32 +67,41 @@ export async function POST(req: Request, res: Response) {
             const refreshTokenValid = Math.floor(Date.now() / 1000) + 2592000;
             const date2 = new Date(refreshTokenValid * 1000);
             const refreshTokenValidDate1 = `${date2.getFullYear()}-${String(date2.getMonth() + 1).padStart(2, '0')}-${String(date2.getDate()).padStart(2, '0')} ${String(date2.getHours() + 1).padStart(2, '0')}:${String(date2.getMinutes() + 1).padStart(2, '0')}:${String(date2.getSeconds() + 1).padStart(2, '0')}`;
-            const accessToken = jwt.sign({
-                exp: accessTokenValid,
-                data: {
-                    fullname: userProfile['name'],
-                    email: userProfile['email'],
-                    userStatus: 1,
-                    picture: userProfile['picture'] == undefined ? "" : userProfile['picture']
-                },
-            }, process.env.JWT_SECRET_KEY as string);
-            const refreshToken = jwt.sign({
-                exp: refreshTokenValid,
-                data: {
-                    fullname: userProfile['name'],
-                    email: userProfile['email'],
-                    userStatus: 1,
-                    picture: userProfile['picture'] == undefined ? "" : userProfile['picture']
-                },
-            }, process.env.JWT_REFRESH_KEY as string);
+
+            const accessSecretKey = new TextEncoder().encode(process.env.JWT_SECRET_KEY as string);
+            const refreshSecretKey = new TextEncoder().encode(process.env.JWT_REFRESH_KEY as string);
+            const accessToken = await new SignJWT({
+                fullname: userProfile['name'],
+                email: userProfile['email'],
+                userStatus: 1,
+                picture: userProfile['picture'] == undefined ? "" : userProfile['picture']
+            }).setProtectedHeader({
+                alg: 'HS256',
+                typ: 'JWT'
+            })
+            .setIssuedAt()
+            .setExpirationTime('24h')
+            .sign(accessSecretKey);
+            const refreshToken = await new SignJWT({
+                fullname: userProfile['name'],
+                email: userProfile['email'],
+                userStatus: 1,
+                picture: userProfile['picture'] == undefined ? "" : userProfile['picture'],
+            }).setProtectedHeader({
+                alg: 'HS256',
+                typ: 'JWT'
+            })
+            .setIssuedAt()
+            .setExpirationTime('30d')
+            .sign(refreshSecretKey);
             await userTokenCollection.create({
                 token: refreshToken,
                 userID: insertedId,
                 validDate: refreshTokenValidDate1
             });
-            const accessCrypto = new NextCrypto(process.env.SECRET_KEY as string);
-            const refreshCrypto = new NextCrypto(process.env.REFRESH_KEY as string);
-            cookies().set('accessToken', await accessCrypto.encrypt(accessToken), {
+            // const accessCrypto = new NextCrypto(process.env.SECRET_KEY as string);
+            // const refreshCrypto = new NextCrypto(process.env.REFRESH_KEY as string);
+            cookies().set('accessToken', await encryptStringV2(accessToken, process.env.SECRET_KEY as string), {
                 httpOnly: true,
                 secure: /^true$/i.test(process.env.USE_SECURE as string),
                 path: '/',
@@ -100,7 +110,7 @@ export async function POST(req: Request, res: Response) {
                 sameSite: 'strict'
             });
             
-            cookies().set('refreshToken', await refreshCrypto.encrypt(refreshToken), {
+            cookies().set('refreshToken', await encryptStringV2(refreshToken, process.env.REFRESH_KEY as string), {
                 httpOnly: true,
                 secure: /^true$/i.test(process.env.USE_SECURE as string),
                 path: '/',

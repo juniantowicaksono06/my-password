@@ -1,4 +1,5 @@
 import { createHash, createCipheriv, createDecipheriv, randomBytes } from "crypto";
+import NextCrypto from "next-crypto";
 export function generateToken(): string {
     const segmentLength: number = 4;
     const segmentCount: number = 4;
@@ -82,4 +83,16 @@ export function decryptString(encryptedData: string) {
   var decrypted = decipher.update(encryptedData, 'base64', 'utf8');
   decrypted += decipher.final();
   return decrypted;
+}
+
+export function encryptStringV2(value: string, key = process.env.SECRET_KEY as string) {
+  const encryptKey = new NextCrypto(key);
+  const encryptedString = encryptKey.encrypt(value);
+  return encryptedString;
+}
+
+export function decryptStringV2(value: string, key = process.env.SECRET_KEY as string) {
+  const decryptKey = new NextCrypto(key);
+  const decryptedString = decryptKey.decrypt(value);
+  return decryptedString;
 }

@@ -1,9 +1,14 @@
 import mongoose, {Connection} from "mongoose";
 import UsersSchema from "./UsersSchema";
 import UserTokenSchema from "./UserTokenSchema";
+import AppMenuSchema from "./AppMenuSchema";
+import PasswordsSchema from "./PasswordsSchema";
 
-const userCollection: mongoose.Model<Database.IUserData> = mongoose.models.users || mongoose.model('users', UsersSchema);
-const userTokenCollection: mongoose.Model<Database.IUserToken> = mongoose.models.userToken || mongoose.model('userToken', UserTokenSchema);
+mongoose.pluralize(null);
+const userCollection: mongoose.Model<Database.IUserData> = mongoose.models.users || mongoose.model('users', UsersSchema, 'users');
+const userTokenCollection: mongoose.Model<Database.IUserToken> = mongoose.models.userToken || mongoose.model('userToken', UserTokenSchema, 'userTokens');
+const appMenuCollection: mongoose.Model<Database.IAppMenu> = mongoose.models.appMenu || mongoose.model('appMenu', AppMenuSchema, 'appMenus');
+const passwordsCollection: mongoose.Model<Database.IPasswords> = mongoose.models.passwords || mongoose.model('passwords', PasswordsSchema, 'passwords');
 
 const MONGODB_URI = process.env.MONGO_URL_STRING as string;
 
@@ -50,5 +55,7 @@ async function ConnectDB(): Promise<Connection> {
 export {
     ConnectDB,
     userCollection,
-    userTokenCollection
+    userTokenCollection,
+    appMenuCollection,
+    passwordsCollection
 }

@@ -7,7 +7,22 @@ const nextConfig = {
         RESIZE_IMAGE_WIDTH: process.env.RESIZE_IMAGE_WIDTH,
         RESIZE_IMAGE_HEIGHT: process.env.RESIZE_IMAGE_HEIGHT
     },
-    reactStrictMode: false
+    reactStrictMode: false,
+    images: {
+        remotePatterns: [
+            {
+                protocol: 'http',
+                hostname: 'localhost',
+                port: '3000',
+                pathname: '/**',
+            },
+            {
+                protocol: 'https',
+                hostname: 'my-password-theta.vercel.app',
+                pathname: '/**',
+            },
+        ]
+    }
 };
 
 const withPWA = NextPWA({
