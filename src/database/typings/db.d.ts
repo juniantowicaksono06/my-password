@@ -28,8 +28,11 @@ namespace Database {
     interface IPasswords {
         userID: Types.ObjectId;
         title: string;
+        user: string;
         url?: string | null | undefined;
         itemType?: string | null | undefined;
-        password: string;
+        password?: string | null | undefined;
+        created_at: Date;
+        updated_at: Date;
     }
 }

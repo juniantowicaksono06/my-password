@@ -241,3 +241,17 @@ span.flatpickr-weekday,
 [x-cloak] {
   display: none !important;
 }
+
+.swal2-popup {
+  background-color: #252525 !important;
+  color: #fff;
+}
+
+.zoom-in {
+  transform: scale(0);
+  transition: transform 0.05s ease-in-out;
+}
+
+.zoom-in.show {
+  transform: scale(1);
+}

@@ -11,6 +11,10 @@ const PasswordsSchema = new Schema({
         type: String,
         required: true
     },
+    user: {
+        type: String,
+        required: true
+    },
     url: {
         type: String,
         optional: true

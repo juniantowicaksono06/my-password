@@ -21,6 +21,7 @@ const Sidebar = ({ sidebarOpen, setSidebarOpen }: SidebarProps) => {
   const trigger = useRef<any>(null);
   const sidebar = useRef<any>(null);
   const [menu, setMenu] = useState([] as AppType.IAppMenu[]);
+  const [windowPathname, setWindowPathname] = useState('');
   const [sidebarLoaded, setSidebarLoaded] = useState(false);
   const getMenus = async() => {
       dispatch({type: 'startLoading'});
@@ -50,7 +51,10 @@ const Sidebar = ({ sidebarOpen, setSidebarOpen }: SidebarProps) => {
       return true;
   }
   useEffect(() => {
+    if(!window.location.pathname.startsWith('/auth/integrations/google/oauth2')) {
       getMenus();
+    }
+    setWindowPathname(window.location.pathname);
   }, [])
 
   const [sidebarExpanded, setSidebarExpanded] = useState<boolean|null>(null);
@@ -104,7 +108,9 @@ const Sidebar = ({ sidebarOpen, setSidebarOpen }: SidebarProps) => {
               {menu.map((item, index) => {
                 const icon = FaSolid[item.icon as keyof typeof FaSolid] as FaSolid.IconDefinition;
                 return <li key={item._id.toString()}>
-                <Link href={item.link} className='group relative flex items-center gap-2.5 rounded-sm py-2 px-4 font-medium text-bodydark1 duration-300 ease-in-out hover:bg-graydark dark:hover:bg-meta-4'>
+                <Link href={item.link} onClick={() => {
+                  setWindowPathname(item.link);
+                }} className={item.link === windowPathname ? 'group relative flex items-center gap-2.5 rounded-sm py-3 px-4 font-medium text-white duration-300 ease-in-out bg-blue-500' : 'group relative flex items-center gap-2.5 rounded-sm py-3 px-4 font-medium text-bodydark2 duration-300 ease-in-out hover:bg-graydark dark:hover:bg-meta-4'}>
                   <span className='mr-3'>
                     <FontAwesomeIcon icon={icon} />
                   </span>

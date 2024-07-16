@@ -63,7 +63,7 @@ const Login = () => {
                                     }
                                     let toast = true;
                                     let showConfirmButton = false;
-                                    let position: SweetAlertPosition = 'top-end';
+                                    let position: SweetAlertPosition = 'top';
                                     if(result.code != 200) {
                                         icon = "warning";
                                         showConfirmButton = true;

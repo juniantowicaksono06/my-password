@@ -13,10 +13,18 @@ namespace Forms {
         userResetTokenValidDate?: Date | null | undefined;
     }
     interface IPasswords {
+        _id: Types.ObjectId | string;
         userID: string;
         title: string;
+        user: string;
         url?: string | null | undefined;
         itemType?: string | null | undefined;
-        password: string;
+        password?: string | null | undefined;
+        created_at: Date;
+        updated_at: Date;
+    }
+
+    interface IPasswordExtends extends Forms.IPasswords {
+        passwordVisible: boolean
     }
 }

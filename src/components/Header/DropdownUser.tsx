@@ -114,7 +114,9 @@ const DropdownUser = (props: {
                 width={185}
                 circle
               />
-            </SkeletonTheme> : profilePicture == "" ? <></> : <img src={`${profilePicture}`} alt="User Profile Picture" className="rounded-full" />
+            </SkeletonTheme> : profilePicture == "" ? <></> : <div className='flex justify-center mt-3'>
+              <img src={`${profilePicture}`} alt="User Profile Picture" className="rounded-full" />
+            </div>
           }
         </div>
         <div className='mt-5 mb-2'>

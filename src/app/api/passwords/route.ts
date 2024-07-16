@@ -1,7 +1,7 @@
 import { ConnectDB, passwordsCollection } from "@/src/database";
 import { NextRequest, NextResponse } from "next/server";
 import Joi from "@hapi/joi";
-import { encryptStringV2 } from "@/src/shared/function";
+import { encryptStringV2, decryptStringV2 } from "@/src/shared/function";
 
 export async function GET(req: Request, res: Response) {
     try {
@@ -10,11 +10,31 @@ export async function GET(req: Request, res: Response) {
         await ConnectDB();
         const myPasswords = await passwordsCollection.find({
             userID: userData.userID
-        });
+        }).select('_id userID title user url itemType password created_at updated_at');
+        var data: Forms.IPasswordExtends[] = [];
+
+        const decryptPromises = myPasswords.map(async(password, index) => {
+            const decryptedPassword = await decryptStringV2(`${password['password']}`, `${process.env.PASSWORD_SECRET}_${process.env.PASSWORD_SECRET_SALT}`) as string;
+            let myPassword = decryptedPassword.replace(`${process.env.SALT_KEY}_`, '');
+            data.push({
+                _id: password['_id'],
+                userID: password['userID'] as unknown as string,
+                title: password['title'],
+                user: password['user'],
+                url: password['url'],
+                password: myPassword,
+                itemType: password['itemType'],
+                created_at: password['created_at'],
+                updated_at: password['updated_at'],
+                passwordVisible: false
+            });
+        })
+
+        await Promise.all(decryptPromises);
 
         return Response.json({
             code: 200,
-            data: myPasswords
+            data: data
         }, {
             status: 200
         });
@@ -32,10 +52,11 @@ export async function GET(req: Request, res: Response) {
 export async function POST(req: NextRequest, res: NextResponse) {
     try {
         const schema = Joi.object({
-            title: Joi.string().required().label("Title"),
-            url: Joi.string().optional().label("Link"),
+            title: Joi.string().min(2).required().label("Title"),
+            user: Joi.string().min(2).required().label("User"),
+            url: Joi.string().optional().label("URL"),
             itemType: Joi.string().optional().label("Type"),
-            password: Joi.string().required().min(8).max(64).label("Password")
+            password: Joi.string().required().min(4).max(64).label("Password")
         });
         let body;
         try {
@@ -59,6 +80,7 @@ export async function POST(req: NextRequest, res: NextResponse) {
         await ConnectDB();
         const passwordItem = new passwordsCollection({
             title: data['title'],
+            user:  data['user'],
             url: data['url'],
             itemType: data['itemType'],
             password: await encryptStringV2(`${process.env.SALT_KEY}_${data['password'] as string}`, `${process.env.PASSWORD_SECRET}_${process.env.PASSWORD_SECRET_SALT}`),
@@ -69,7 +91,8 @@ export async function POST(req: NextRequest, res: NextResponse) {
         return Response.json({
             code: 200,
             data: {
-                id: passwordSave._id
+                id: passwordSave._id,
+                user: data['user']
             }
         }, {
             status: 200

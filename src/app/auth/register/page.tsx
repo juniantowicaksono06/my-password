@@ -15,10 +15,10 @@ import swal from 'sweetalert2';
 import Loading from '@/src/components/Loading/Loading';
 
 const Register = () => {
-    const [uploadedImgUrl, setUploadedImgUrl] = useState("")
-    const [openCropper, setOpenCropper] = useState(false)
-    const [imageUrl, setImageUrl] = useState("")
-    const [isLoading, setIsLoading] = useState(false)
+    const [uploadedImgUrl, setUploadedImgUrl] = useState("");
+    const [openCropper, setOpenCropper] = useState(false);
+    const [imageUrl, setImageUrl] = useState("");
+    const [isLoading, setIsLoading] = useState(false);
 
 
     const registerSchema = Yup.object().shape({
@@ -33,23 +33,23 @@ const Register = () => {
         passwordConfirmation: Yup.string()
         .oneOf([Yup.ref('password')], 'Passwords must match')
         .required('Input is required')
-    })
+    });
     const initialValues = {
         password: "",
         fullname: "",
         passwordConfirmation: "",
         email: ""
-    }
+    };
     return (<>
         <Loading isLoading={isLoading} />
         <ImageCropper isOpen={openCropper} imageUrl={imageUrl} closeCropper={() => setOpenCropper(false)} uploadImage={async (file: Blob | null) => {
-            const formData = new FormData()
-            formData.append('image', file as Blob, 'gambar.png')
+            const formData = new FormData();
+            formData.append('image', file as Blob, 'gambar.png');
             const response = await fetch(`${window.location.origin as string}/api/profile-picture-upload`, {
                 method: "POST",
                 body: formData
-            })
-            setIsLoading(true)
+            });
+            setIsLoading(true);
             if(response.ok) {
                 const result: {
                     code: number,
@@ -65,7 +65,7 @@ const Register = () => {
                     timer: 5000,
                     toast: true,
                     showConfirmButton: false,
-                    position: "top-end"
+                    position: "top"
                 });
                 setOpenCropper(false);
                 setImageUrl("");
