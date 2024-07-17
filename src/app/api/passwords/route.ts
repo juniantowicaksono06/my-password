@@ -76,7 +76,6 @@ export async function POST(req: NextRequest, res: NextResponse) {
             });
         }
         const userDataJSON = req.headers.get('x-user-data') as string;
-        console.log(userDataJSON);
         const userData = JSON.parse(userDataJSON) as Forms.IPasswords;
         await ConnectDB();
         const passwordItem = new passwordsCollection({
@@ -101,7 +100,6 @@ export async function POST(req: NextRequest, res: NextResponse) {
         
     }
     catch(error) {
-        console.error(error)
         return Response.json({
             code: 500,
             message: "Internal server error"

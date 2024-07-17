@@ -71,6 +71,7 @@ export async function POST(req: Request, res: Response) {
             const accessSecretKey = new TextEncoder().encode(process.env.JWT_SECRET_KEY as string);
             const refreshSecretKey = new TextEncoder().encode(process.env.JWT_REFRESH_KEY as string);
             const accessToken = await new SignJWT({
+                userID: insertedId,
                 fullname: userProfile['name'],
                 email: userProfile['email'],
                 userStatus: 1,
@@ -83,6 +84,7 @@ export async function POST(req: Request, res: Response) {
             .setExpirationTime('24h')
             .sign(accessSecretKey);
             const refreshToken = await new SignJWT({
+                userID: insertedId,
                 fullname: userProfile['name'],
                 email: userProfile['email'],
                 userStatus: 1,

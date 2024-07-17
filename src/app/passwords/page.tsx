@@ -216,7 +216,7 @@ const Page = () => {
                                         <button type="button" className="bg-purple-500 hover:bg-purple-700 text-white px-3 py-2 rounded min-h-12" onClick={() => {
                                             const genPass = generateReadablePassword();
                                             const data = {
-                                                ...initialValues,
+                                                ...values,
                                                 password: genPass
                                             };
                                             setInitialValues(data);
@@ -399,7 +399,7 @@ const Page = () => {
                                         <button type="button" className="bg-purple-500 hover:bg-purple-700 text-white px-3 py-2 rounded min-h-12" onClick={() => {
                                             const genPass = generateReadablePassword();
                                             const data = {
-                                                ...editInitialValues,
+                                                ...values,
                                                 password: genPass
                                             };
                                             setEditInitialValues(data);
