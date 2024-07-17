@@ -1,8 +1,8 @@
 {
     "name": "My Password",
-    "short_name": "PWA",
-    "theme_color": "#2196f3",
-    "background_color": "#2196f3",
+    "short_name": "My Password",
+    "theme_color": "#000000",
+    "background_color": "#000000",
     "display": "standalone",
     "orientation": "portrait",
     "scope": "/",

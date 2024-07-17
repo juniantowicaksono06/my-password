@@ -34,7 +34,6 @@ class TokenHandler {
             var token;
             if(encrypted) {
                 if(this.encryptedAccessToken === undefined) {
-                    console.warn("No Encrypted Access token Found");
                     return false;
                 }
                 const decryptedAccessToken = await decryptStringV2(this.encryptedAccessToken, process.env.ACCESS_KEY as string);
@@ -52,8 +51,6 @@ class TokenHandler {
             this.jwtAccessPayload = accessPayload['payload'] as unknown as Forms.IUserData;
             return true;
         } catch (error) {
-            console.error("Error");
-            console.error(error);
             return false;
         }
     }
