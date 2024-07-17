@@ -5,18 +5,19 @@ export async function GET(req: NextRequest, res: NextResponse) {
     const cookieStore = cookies();
     cookies().delete('accessToken');
     cookies().delete('refreshToken');
-    cookies().set({
-        name: 'accessToken',
-        value: '',
+    cookies().set('accessToken', '',{
         expires: new Date('2016-10-05'),
-        path: '/'
+        path: '/',
+        secure: /^true$/i.test(process.env.USE_SECURE as string),
+        partitioned: /^true$/i.test(process.env.USE_SECURE as string),
     });
-    cookies().set({
-        name: 'refreshToken',
-        value: '',
+    cookies().set('refreshToken', '',{
         expires: new Date('2016-10-05'),
-        path: '/'
+        path: '/',
+        secure: /^true$/i.test(process.env.USE_SECURE as string),
+        partitioned: /^true$/i.test(process.env.USE_SECURE as string),
     });
+    console.log("LOGOUT")
     cookieStore.getAll().forEach(cookie => {
         cookieStore.delete(cookie.name);
     })
