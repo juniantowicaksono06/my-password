@@ -84,7 +84,6 @@ export const middleware = async (request: NextRequest, response: NextResponse) =
         verify.init();
         const validated = await verify.validate();
         if(!isNotWebLoginPath && validated !== false) {
-            console.log("Request Refresh Token");
             const response = await fetch(`${process.env.APP_BASE_URL as string}/api/auth/refresh-token`, {
                 method: "POST",
                 headers: {
@@ -110,9 +109,6 @@ export const middleware = async (request: NextRequest, response: NextResponse) =
             else {
                 return forceLogout(request, webResponse);
             }
-        }
-        else if(validated !== false) {
-            return webResponse;
         }
         else if(isNotWebLoginPath) {
             if(validated !== false) {
