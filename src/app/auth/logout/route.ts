@@ -19,6 +19,7 @@ export async function GET(req: NextRequest, res: NextResponse) {
     });
     console.log("LOGOUT")
     cookieStore.getAll().forEach(cookie => {
+        console.log(cookie.name);
         cookieStore.delete(cookie.name);
     })
     const response = NextResponse.redirect(new URL('/auth/login', process.env.APP_BASE_URL as string));
