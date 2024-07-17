@@ -83,6 +83,8 @@ export const middleware = async (request: NextRequest, response: NextResponse) =
         });
         verify.init();
         const validated = await verify.validate();
+        console.log("isNotWebLoginPath:", isNotWebLoginPath);
+        console.log("validated:", validated);
         if(!isNotWebLoginPath && validated !== false) {
             const response = await fetch(`${process.env.APP_BASE_URL as string}/api/auth/refresh-token`, {
                 method: "POST",
