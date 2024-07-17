@@ -18,6 +18,7 @@ const forceLogout = (req: NextRequest, res: NextResponse) => {
     cookieList.forEach(cookie => {
         response.cookies.delete(cookie.name)
     })
+    console.log("Forced Logout");
     return response
 }
 
@@ -87,6 +88,7 @@ export const middleware = async (request: NextRequest, response: NextResponse) =
         console.log("isNotWebLoginPath:", isNotWebLoginPath);
         console.log("validated:", validated);
         if(!isNotWebLoginPath && validated !== false) {
+            console.log("Request Refresh Token");
             const response = await fetch(`${process.env.APP_BASE_URL as string}/api/auth/refresh-token`, {
                 method: "POST",
                 headers: {
@@ -110,6 +112,7 @@ export const middleware = async (request: NextRequest, response: NextResponse) =
                 }
             }
             else {
+                console.log("About to force log out");
                 return forceLogout(request, webResponse);
             }
         }
