@@ -107,18 +107,14 @@ export async function POST(req: Request, res: Response) {
                 httpOnly: true,
                 secure: /^true$/i.test(process.env.USE_SECURE as string),
                 path: '/',
-                partitioned: /^true$/i.test(process.env.USE_SECURE as string),
                 maxAge: 1 * 24 * 60 * 60,
-                sameSite: 'strict'
             });
             
             cookies().set('refreshToken', await encryptStringV2(refreshToken, process.env.REFRESH_KEY as string), {
                 httpOnly: true,
                 secure: /^true$/i.test(process.env.USE_SECURE as string),
                 path: '/',
-                partitioned: /^true$/i.test(process.env.USE_SECURE as string),
                 maxAge: 30 * 24 * 60 * 60,
-                sameSite: 'strict'
             });
             return Response.json({
                 code: 200
