@@ -104,7 +104,6 @@ export async function POST(req: Request, res: Response) {
                     httpOnly: true,
                     secure: /^true$/i.test(process.env.USE_SECURE as string),
                     path: '/',
-                    partitioned: /^true$/i.test(process.env.USE_SECURE as string),
                     maxAge: 1 * 24 * 60 * 60
                 });
                 
@@ -112,7 +111,6 @@ export async function POST(req: Request, res: Response) {
                     httpOnly: true,
                     secure: /^true$/i.test(process.env.USE_SECURE as string),
                     path: '/',
-                    partitioned: /^true$/i.test(process.env.USE_SECURE as string),
                     maxAge: 30 * 24 * 60 * 60
                 });
 
