@@ -83,6 +83,7 @@ export const middleware = async (request: NextRequest, response: NextResponse) =
         });
         verify.init();
         const validated = await verify.validate();
+        console.log("Current Path", currentPath);
         console.log("isNotWebLoginPath:", isNotWebLoginPath);
         console.log("validated:", validated);
         if(!isNotWebLoginPath && validated !== false) {
