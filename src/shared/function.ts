@@ -1,7 +1,7 @@
 import { createHash, createCipheriv, createDecipheriv } from "crypto";
 import NextCrypto from "next-crypto";
 // import faker from "@faker-js/faker";
-import {faker} from '@faker-js/faker';
+import {faker} from '@faker-js/faker/locale/en';
 export function generateToken(): string {
     const segmentLength: number = 4;
     const segmentCount: number = 4;
