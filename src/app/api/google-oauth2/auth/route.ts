@@ -8,6 +8,7 @@ import {Types} from 'mongoose';
 import { SignJWT } from 'jose';
 import { encryptStringV2, generateOTP } from "@/src/shared/function";
 import Email from "@/src/shared/Email";
+import Cryptography from "@/src/shared/Cryptography";
 
 export async function POST(req: Request, res: Response) {
     const schema = Joi.object({
@@ -63,6 +64,17 @@ export async function POST(req: Request, res: Response) {
                     userCreatedType: 'oauth-google'
                 });
                 insertedId = inserted._id;
+                const dbKeys = new Database();
+                dbKeys.createConnection('keys').initModel();
+                const { userKeysCollection } = dbKeys.getModels();
+                const myCrypto = new Cryptography();
+                myCrypto.generateNewPair();
+
+                await userKeysCollection?.create({
+                    userID: user!._id,
+                    publicKey: await encryptStringV2(myCrypto.getPublicKey(), process.env.USER_PUBLIC_KEY as string),
+                    privateKey: await encryptStringV2(myCrypto.getPrivateKey(), process.env.USER_PRIVATE_KEY as string)
+                })
             }
             else {
                 insertedId = user['_id'];
