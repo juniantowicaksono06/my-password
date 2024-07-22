@@ -1,9 +1,12 @@
-import { ConnectDB, appMenuCollection } from "@/src/database";
+import Database from "@/src/database/database";
 
 export async function GET(req: Request, res: Response) {
     try {
-        await ConnectDB();
-        const result = await appMenuCollection.find();
+        // await ConnectDB();
+        const dbMain = new Database('main');
+        dbMain.initModel();
+        const { appMenuCollection } = dbMain.getModels();
+        const result = await appMenuCollection!.find();
 
         return Response.json({
             code: 200,

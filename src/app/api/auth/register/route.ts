@@ -1,11 +1,12 @@
 import Joi from "@hapi/joi";
 import  Boom from "@hapi/boom";
-import { ConnectDB, userCollection } from '@/src/database/index';
 import Email from "@/src/shared/Email";
-import { generateToken } from '@/src/shared/function';
+import { encryptStringV2, generateToken } from '@/src/shared/function';
 import moment from "moment";
+import Cryptography from "@/src/shared/Cryptography";
 
 import {hash, compare, genSaltSync} from 'bcrypt'
+import Database from '@/src/database/database';
 
 /**
  * Registers a new user by validating the provided data against a Joi schema and checking if the username or email already exists in the database.
@@ -43,8 +44,13 @@ export async function POST(req: Request, res: Response) {
                 "message": error.details.map(i => i.message).join(',')
             });
         }
-        await ConnectDB()
-        const user = await userCollection.findOne({
+        
+
+        const dbMain = new Database();
+        dbMain.createConnection('main').initModel();
+        const { userCollection } = dbMain.getModels();
+        // await ConnectDB()
+        const user = await userCollection?.findOne({
             email: data['email']
         })
         if(user) {
@@ -70,7 +76,9 @@ export async function POST(req: Request, res: Response) {
 
         // Format the date as "Year-Month-Date Hour:Minute:Second"
         // let formattedDate = currentDate.toISOString().replace(/T|Z/g, ' ').trim();
-        data['password'] = hashPassword
+        data['password'] = hashPassword;
+        const myCrypto = new Cryptography();
+        myCrypto.generateNewPair();
         let insertData: Partial<Forms.IUserData> = {
             email: data['email'],
             password: data['password'],
@@ -84,10 +92,21 @@ export async function POST(req: Request, res: Response) {
         if(Object.keys(data).includes("picture")) {
             insertData['picture'] = data['picture']
         }
-        await userCollection.create({
+        const userInsert = new userCollection!({
             ...insertData,
             userStatus: 0,
             userCreatedType: 'regular'
+        })
+        const userSave = await userInsert.save();
+
+        const dbKeys = new Database();
+        dbKeys.createConnection('keys').initModel();
+        const { userKeysCollection } = dbKeys.getModels();
+
+        await userKeysCollection?.create({
+            userID: userSave._id,
+            publicKey: await encryptStringV2(myCrypto.getPublicKey(), process.env.USER_PUBLIC_KEY as string),
+            privateKey: await encryptStringV2(myCrypto.getPrivateKey(), process.env.USER_PRIVATE_KEY as string)
         })
         // Sending Email
         try {

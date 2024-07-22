@@ -2,6 +2,7 @@ import { createHash, createCipheriv, createDecipheriv } from "crypto";
 import NextCrypto from "next-crypto";
 // import faker from "@faker-js/faker";
 import {faker} from '@faker-js/faker/locale/en';
+
 export function generateToken(): string {
     const segmentLength: number = 4;
     const segmentCount: number = 4;
@@ -151,4 +152,13 @@ export function generateReadablePassword() {
   const specialChar3 = getRandomElement(char); // Pick a random special character
   const password = `${word1}${specialChar1}${word2}${specialChar2}${word3}${specialChar3}${number}`;
   return password;
+}
+
+/**
+ * Generates a random one-time password (OTP) with a minimum value of 100000 and a maximum value of 999999.
+ *
+ * @return {number} The generated OTP.
+ */
+export function generateOTP() {
+    return faker.datatype.number({ min: 199999, max: 999999 });
 }

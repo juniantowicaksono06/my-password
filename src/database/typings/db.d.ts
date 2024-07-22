@@ -23,7 +23,7 @@ namespace Database {
         name: string;
         icon: string;
         link: string;
-        active: string;
+        active: boolean;
     }
     interface IPasswords {
         userID: Types.ObjectId;
@@ -34,5 +34,16 @@ namespace Database {
         password?: string | null | undefined;
         created_at: Date;
         updated_at: Date;
+    }
+    interface ILoginOTP {
+        userID: Types.ObjectId;
+        otp: string;
+        validUntil: Date;
+        isActive: boolean;
+    }
+    interface IUserKeys {
+        userID: Types.ObjectId;
+        publicKey: string;
+        privateKey: string;
     }
 }

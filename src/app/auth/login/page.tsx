@@ -59,20 +59,23 @@ const Login = () => {
                                     } = await response.json();
                                     let icon: SweetAlertIcon | undefined = "success";
                                     let didCloseFn: undefined | (() => void) = () => {
-                                        window.location.href = '/';
+                                        window.location.href = '/auth/login-otp';
                                     }
-                                    let toast = true;
+                                    let toast = false;
+                                    let title = "Success";
                                     let showConfirmButton = false;
-                                    let position: SweetAlertPosition = 'top';
+                                    let position: SweetAlertPosition = 'center';
                                     if(result.code != 200) {
                                         icon = "warning";
+                                        title = "Warning";
                                         showConfirmButton = true;
-                                        toast = false;
-                                        position = 'center';
+                                        // toast = false;
+                                        // position = 'center';
                                         didCloseFn = undefined;
                                     }
                                     swal.fire({
-                                        title: result.message,
+                                        title: title,
+                                        text: result.message,
                                         icon: icon,
                                         timer: 3000,
                                         toast: toast,

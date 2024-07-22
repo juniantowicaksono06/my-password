@@ -2,7 +2,8 @@ import "@/src/assets/css/globals.css";
 import '@/src/assets/css/satoshi.css';
 import { pathname } from 'next-extra/pathname';
 import { headers } from 'next/headers';
-import  { ConnectDB, userCollection } from '@/src/database/index';
+// import  { ConnectDB, userCollection } from '@/src/database/index';
+import Database from "@/src/database/database";
 import type { Metadata } from "next";
 import { Inter } from "next/font/google";
 const inter = Inter({ subsets: ["latin"] });
@@ -18,9 +19,11 @@ async function activate() {
   let splitUrl = urlPath.split('/activate/');
   let token = splitUrl[1];
   var currentDate = new Date();
-  await ConnectDB();
+  const dbMain = new Database('main');
+  dbMain.initModel();
+  const {userCollection} = dbMain.getModels();
   console.log(token)
-  const query = await userCollection.findOne({
+  const query = await userCollection!.findOne({
     userStatus: {
       $ne: 1,
     },
@@ -42,7 +45,7 @@ async function activate() {
     }
   })
   if(query) {
-    await userCollection.updateOne({
+    await userCollection!.updateOne({
       _id: query['_id']
     }, {
       $set: {

@@ -1,10 +1,11 @@
 import { cookies } from 'next/headers';
 import Joi from "@hapi/joi";
-import NextCrypto from 'next-crypto';
-import { ConnectDB, userCollection, userTokenCollection } from '@/src/database';
+// import { ConnectDB, userCollection, userTokenCollection, loginOTPCollection } from '@/src/database';
 import { compare } from 'bcrypt';
 import { SignJWT } from 'jose';
-import { encryptStringV2 } from '@/src/shared/function';
+import { encryptStringV2, generateOTP } from '@/src/shared/function';
+import Database from '@/src/database/database';
+import Email from '@/src/shared/Email';
 
 /**
  * Handles the POST request for user login, validates user credentials, generates access and refresh tokens, and sets cookies.
@@ -44,8 +45,11 @@ export async function POST(req: Request, res: Response) {
         }
     } = {};
     try {
-        await ConnectDB();
-        const user = await userCollection.findOne({
+        const dbMain = new Database('main');
+        dbMain.initModel();
+        const {userCollection, loginOTPCollection} = dbMain.getModels();
+        // await ConnectDB();
+        const user = await userCollection!.findOne({
             email: data['email']
         })
         if(user) {
@@ -58,69 +62,58 @@ export async function POST(req: Request, res: Response) {
                 });
             }
             if(await compare(data['password'] as string, user['password'] as string)) {
-
-                const accessTokenValid = Math.floor(Date.now() / 1000) + (60 * 60 * 24);
-                const refreshTokenValid = Math.floor(Date.now() / 1000) + 2592000;
-                const date2 = new Date(refreshTokenValid * 1000);
-                // const refreshTokenValidDate1 = `${date2.getFullYear()}-${String(date2.getMonth() + 1).padStart(2, '0')}-${String(date2.getDate()).padStart(2, '0')} ${String(date2.getHours() + 1).padStart(2, '0')}:${String(date2.getMinutes() + 1).padStart(2, '0')}:${String(date2.getSeconds() + 1).padStart(2, '0')}`;
                 const currentDate = new Date();
                 currentDate.setDate(currentDate.getDate() + 30);
-                const refreshTokenValidDate1 = currentDate.toDateString();
-                const accessSecretKey = new TextEncoder().encode(process.env.JWT_SECRET_KEY as string);
-                const refreshSecretKey = new TextEncoder().encode(process.env.JWT_REFRESH_KEY as string);
-                const accessToken = await new SignJWT({
-                    userID: user['_id'],
-                    fullname: user['fullname'],
-                    email: user['email'],
-                    userStatus: user['userStatus'],
-                    picture: user['picture'] == undefined ? "" : user['picture']
-                }).setProtectedHeader({
-                    alg: 'HS256',
-                    typ: 'JWT'
-                })
-                .setIssuedAt()
-                .setExpirationTime('24h')
-                .sign(accessSecretKey);
-                const refreshToken = await new SignJWT({
-                    userID: user['_id'],
-                    fullname: user['fullname'],
-                    email: user['email'],
-                    userStatus: user['userStatus'],
-                    picture: user['picture'] == undefined ? "" : user['picture'],
-                }).setProtectedHeader({
-                    alg: 'HS256',
-                    typ: 'JWT'
-                })
-                .setIssuedAt()
-                .setExpirationTime('30d')
-                .sign(refreshSecretKey);
+                const otpSecretKey = new TextEncoder().encode(process.env.JWT_OTP as string);
+                
+                
 
-                await userTokenCollection.create({
-                    token: refreshToken,
-                    userID: user['_id'],
-                    validDate: refreshTokenValidDate1
+                const otpCode = generateOTP();
+                
+                // Set every otp as invalid for the current logged in user
+                await loginOTPCollection!.updateMany({
+                    userID: user['_id']
+                }, {
+                    $set: {
+                        isActive: false
+                    }
                 });
-                cookies().set('accessToken', await encryptStringV2(accessToken), {
+
+                await loginOTPCollection!.create({
+                    userID: user['_id'],
+                    otp: otpCode,
+                    validUntil: currentDate.toDateString(),
+                    isActive: true
+                })
+
+                const otpAccess = await new SignJWT({
+                    userID: user['_id']
+                }).setProtectedHeader({
+                    alg: 'HS256',
+                    typ: 'JWT'
+                }).setIssuedAt()
+                .setExpirationTime('24h')
+                .sign(otpSecretKey);
+
+                cookies().set('otpAccess', await encryptStringV2(otpAccess, process.env.OTP_KEY), {
                     httpOnly: true,
                     secure: /^true$/i.test(process.env.USE_SECURE as string),
                     path: '/',
-                    maxAge: 1 * 24 * 60 * 60
+                    maxAge: 60 * 60 * 24 * 7
                 });
                 
-                cookies().set('refreshToken', await encryptStringV2(refreshToken, process.env.REFRESH_KEY as string), {
-                    httpOnly: true,
-                    secure: /^true$/i.test(process.env.USE_SECURE as string),
-                    path: '/',
-                    maxAge: 30 * 24 * 60 * 60
-                });
+                // Sending Email
+                try {
+                    const email = new Email();
+                    email.init();
+                    email.sendEmail(data.email as string, `Hello, ${user.fullname}`, "", `Here is your OTP Code to login: ${otpCode}`);
+                } catch (error) {
+                    
+                }
 
                 result = {
                     code: 200,
-                    message: "Login successfully",
-                    data: {
-                        accessToken: accessToken,
-                        refreshToken: refreshToken
-                    }
+                    message: "An OTP code was succesfully send to your email!"
                 };
             }
             else {
@@ -141,6 +134,7 @@ export async function POST(req: Request, res: Response) {
         })
     }
     catch(error) {
+        console.error(error)
         return Response.json({
             code: 500,
             message: "Internal server error"

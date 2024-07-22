@@ -26,16 +26,19 @@ const CallbackPage = () => {
             });
             if(response.ok) {
                 localStorage.removeItem('latestCSRFToken');
-                window.location.href = '/';
+                window.location.href = '/auth/login-otp';
             }
             else {
                 Swal.fire({
-                    title: "Token is invalid",
+                    title: "Error",
+                    text: "Token is invalid",
+                    didClose: () => {
+                        window.location.href = '/auth/login';
+                    },
                     icon: "error",
                     toast: true,
                     showConfirmButton: false,
                 })
-                window.location.href = '/auth/login';
             }
         }
     }

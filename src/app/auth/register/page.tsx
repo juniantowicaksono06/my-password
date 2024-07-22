@@ -7,7 +7,7 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 
 import * as faRegular from '@fortawesome/free-regular-svg-icons';
 import crypto from 'crypto';
-import { useState } from 'react';
+import { useState, useRef } from 'react';
 import ImageCropper from '@/src/components/ImageCropper/ImageCropper';
 import { Formik, Form, Field } from 'formik';
 import * as Yup from 'yup';
@@ -19,6 +19,7 @@ const Register = () => {
     const [openCropper, setOpenCropper] = useState(false);
     const [imageUrl, setImageUrl] = useState("");
     const [isLoading, setIsLoading] = useState(false);
+    const inputFileRef = useRef<HTMLInputElement>(null);
 
 
     const registerSchema = Yup.object().shape({
@@ -92,7 +93,7 @@ const Register = () => {
                         <Formik
                             initialValues={initialValues}
                             validationSchema={registerSchema}
-                            onSubmit={async(values) => {
+                            onSubmit={async(values, {resetForm}) => {
                                 const submitData: {
                                     password: string,
                                     email: string,
@@ -130,6 +131,10 @@ const Register = () => {
                                             showConfirmButton: false,
                                             position: "top-end"
                                         });
+                                        resetForm();
+                                        setUploadedImgUrl("");
+                                        setImageUrl("");
+                                        inputFileRef.current!.value = "";
                                     }
                                     else {
                                         swal.fire({
@@ -300,7 +305,7 @@ const Register = () => {
                                                 </div>
                                             </div>
                                         </div>
-                                        <input type="file" className="opacity-0 w-full h-40 hover:cursor-pointer" onChange={(event: React.ChangeEvent<HTMLInputElement>) => {
+                                        <input type="file" ref={inputFileRef} className="opacity-0 w-full h-40 hover:cursor-pointer" onChange={(event: React.ChangeEvent<HTMLInputElement>) => {
                                             const currentFiles = event.target.files
                                             if(currentFiles && currentFiles.length > 0) {
                                                 const reader = new FileReader()

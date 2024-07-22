@@ -1,12 +1,13 @@
 
 import Joi from "@hapi/joi";
 import axios from 'axios';
-import {ConnectDB, userCollection, userTokenCollection} from "@/src/database";
+// import {ConnectDB, userCollection, userTokenCollection} from "@/src/database";
+import Database from "@/src/database/database";
 import { cookies } from 'next/headers';
 import {Types} from 'mongoose';
-import NextCrypto from 'next-crypto';
 import { SignJWT } from 'jose';
-import { encryptStringV2 } from "@/src/shared/function";
+import { encryptStringV2, generateOTP } from "@/src/shared/function";
+import Email from "@/src/shared/Email";
 
 export async function POST(req: Request, res: Response) {
     const schema = Joi.object({
@@ -44,14 +45,17 @@ export async function POST(req: Request, res: Response) {
                   Authorization: `Bearer ${data['access_token']}`
                 }
             });
-            await ConnectDB();
+            // await ConnectDB();
+            const dbMain = new Database();
+            dbMain.initModel();
+            const {userCollection, userTokenCollection, loginOTPCollection} = dbMain.getModels();
             const userProfile = userProfileResponse.data;
-            const user = await userCollection.findOne({
+            const user = await userCollection!.findOne({
                 email: userProfile['email']
             });
             var insertedId: Types.ObjectId;
             if(!user) {
-                let inserted = await userCollection.create({
+                let inserted = await userCollection!.create({
                     fullname: userProfile.name,
                     picture: userProfile.picture,
                     email: userProfile.email,
@@ -63,59 +67,56 @@ export async function POST(req: Request, res: Response) {
             else {
                 insertedId = user['_id'];
             }
-            const accessTokenValid = Math.floor(Date.now() / 1000) + (60 * 60 * 24);
-            const refreshTokenValid = Math.floor(Date.now() / 1000) + 2592000;
-            const date2 = new Date(refreshTokenValid * 1000);
-            const refreshTokenValidDate1 = `${date2.getFullYear()}-${String(date2.getMonth() + 1).padStart(2, '0')}-${String(date2.getDate()).padStart(2, '0')} ${String(date2.getHours() + 1).padStart(2, '0')}:${String(date2.getMinutes() + 1).padStart(2, '0')}:${String(date2.getSeconds() + 1).padStart(2, '0')}`;
 
-            const accessSecretKey = new TextEncoder().encode(process.env.JWT_SECRET_KEY as string);
-            const refreshSecretKey = new TextEncoder().encode(process.env.JWT_REFRESH_KEY as string);
-            const accessToken = await new SignJWT({
-                userID: insertedId,
-                fullname: userProfile['name'],
-                email: userProfile['email'],
-                userStatus: 1,
-                picture: userProfile['picture'] == undefined ? "" : userProfile['picture']
-            }).setProtectedHeader({
-                alg: 'HS256',
-                typ: 'JWT'
-            })
-            .setIssuedAt()
-            .setExpirationTime('24h')
-            .sign(accessSecretKey);
-            const refreshToken = await new SignJWT({
-                userID: insertedId,
-                fullname: userProfile['name'],
-                email: userProfile['email'],
-                userStatus: 1,
-                picture: userProfile['picture'] == undefined ? "" : userProfile['picture'],
-            }).setProtectedHeader({
-                alg: 'HS256',
-                typ: 'JWT'
-            })
-            .setIssuedAt()
-            .setExpirationTime('30d')
-            .sign(refreshSecretKey);
-            await userTokenCollection.create({
-                token: refreshToken,
-                userID: insertedId,
-                validDate: refreshTokenValidDate1
+            const currentDate = new Date();
+            currentDate.setDate(currentDate.getDate() + 30);
+            const otpSecretKey = new TextEncoder().encode(process.env.JWT_OTP as string);
+            
+            
+
+            const otpCode = generateOTP();
+            
+            // Set every otp as invalid for the current logged in user
+            await loginOTPCollection!.updateMany({
+                userID: user!['_id']
+            }, {
+                $set: {
+                    isActive: false
+                }
             });
-            // const accessCrypto = new NextCrypto(process.env.SECRET_KEY as string);
-            // const refreshCrypto = new NextCrypto(process.env.REFRESH_KEY as string);
-            cookies().set('accessToken', await encryptStringV2(accessToken, process.env.SECRET_KEY as string), {
+
+            await loginOTPCollection!.create({
+                userID: user!['_id'],
+                otp: otpCode,
+                validUntil: currentDate.toDateString(),
+                isActive: true
+            })
+
+            const otpAccess = await new SignJWT({
+                userID: user!['_id']
+            }).setProtectedHeader({
+                alg: 'HS256',
+                typ: 'JWT'
+            }).setIssuedAt()
+            .setExpirationTime('24h')
+            .sign(otpSecretKey);
+
+            cookies().set('otpAccess', await encryptStringV2(otpAccess, process.env.OTP_KEY), {
                 httpOnly: true,
                 secure: /^true$/i.test(process.env.USE_SECURE as string),
                 path: '/',
-                maxAge: 1 * 24 * 60 * 60,
+                maxAge: 60 * 60 * 24 * 7
             });
             
-            cookies().set('refreshToken', await encryptStringV2(refreshToken, process.env.REFRESH_KEY as string), {
-                httpOnly: true,
-                secure: /^true$/i.test(process.env.USE_SECURE as string),
-                path: '/',
-                maxAge: 30 * 24 * 60 * 60,
-            });
+            // Sending Email
+            try {
+                const email = new Email();
+                email.init();
+                email.sendEmail(user!.email as string, `Hello, ${user!.fullname}`, "", `Here is your OTP Code to login: ${otpCode}`);
+            } catch (error) {
+                
+            }
+
             return Response.json({
                 code: 200
             }, {

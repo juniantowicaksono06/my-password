@@ -1,14 +1,17 @@
 import mongoose, {Connection} from "mongoose";
-import UsersSchema from "./UsersSchema";
-import UserTokenSchema from "./UserTokenSchema";
-import AppMenuSchema from "./AppMenuSchema";
-import PasswordsSchema from "./PasswordsSchema";
+import UsersSchema from "./main-schema/UsersSchema";
+import UserTokenSchema from "./main-schema/UserTokenSchema";
+import AppMenuSchema from "./main-schema/AppMenuSchema";
+import PasswordsSchema from "./main-schema/PasswordsSchema";
+import LoginOTPSchema from "./main-schema/LoginOTPSchema";
+import UserKeysSchema from "./dbkeys-schema/UserKeysSchema";
 
 mongoose.pluralize(null);
 const userCollection: mongoose.Model<Database.IUserData> = mongoose.models.users || mongoose.model('users', UsersSchema, 'users');
 const userTokenCollection: mongoose.Model<Database.IUserToken> = mongoose.models.userToken || mongoose.model('userToken', UserTokenSchema, 'userTokens');
 const appMenuCollection: mongoose.Model<Database.IAppMenu> = mongoose.models.appMenu || mongoose.model('appMenu', AppMenuSchema, 'appMenus');
 const passwordsCollection: mongoose.Model<Database.IPasswords> = mongoose.models.passwords || mongoose.model('passwords', PasswordsSchema, 'passwords');
+const loginOTPCollection: mongoose.Model<Database.ILoginOTP> = mongoose.models.loginOTP || mongoose.model('loginOTP', LoginOTPSchema, 'loginOTP');
 
 const MONGODB_URI = process.env.MONGO_URL_STRING as string;
 
@@ -49,7 +52,7 @@ async function ConnectDB(): Promise<Connection> {
   
     cached.conn = await cached.promise;
     return cached.conn;
-  }
+}
 
 
 export {
@@ -57,5 +60,6 @@ export {
     userCollection,
     userTokenCollection,
     appMenuCollection,
-    passwordsCollection
+    passwordsCollection,
+    loginOTPCollection
 }

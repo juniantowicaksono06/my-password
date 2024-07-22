@@ -12,11 +12,26 @@ import { encryptStringV2 } from "./shared/function";
  * @return {NextResponse} The response object after deleting cookies and redirecting.
  */
 const forceLogout = (req: NextRequest, res: NextResponse) => {
-    const cookieStore = cookies()
+    const cookieStore = cookies();
     const response = NextResponse.redirect(new URL('/auth/login', req.url))
+    // cookies().set('accessToken', "", {
+    //     httpOnly: true,
+    //     secure: /^true$/i.test(process.env.USE_SECURE as string),
+    //     path: '/',
+    //     maxAge: -1
+    // });
+    
+    // cookies().set('refreshToken', "", {
+    //     httpOnly: true,
+    //     secure: /^true$/i.test(process.env.USE_SECURE as string),
+    //     path: '/',
+    //     maxAge: -1
+    // });
     let cookieList = cookieStore.getAll()
     cookieList.forEach(cookie => {
-        response.cookies.delete(cookie.name)
+        if(cookie.name != "otpAccess") {
+            response.cookies.delete(cookie.name)
+        }
     })
     return response
 }
@@ -27,7 +42,7 @@ export const middleware = async (request: NextRequest, response: NextResponse) =
     headers.set("x-current-href", request.nextUrl.href);
     headers.set("x-current-path", request.nextUrl.pathname);
     if(currentPath.startsWith('/api')) {
-        const notRequiredAuth = ["/api/auth/login", "/api/auth/refresh-token", "/api/auth/register", "/api/google-oauth2/auth", "/api/profile-picture-upload", "/api/test"];
+        const notRequiredAuth = ["/api/auth/login", "/api/auth/refresh-token", "/api/auth/register", "/api/google-oauth2/auth", "/api/profile-picture-upload", "/api/test", "/api/auth/verify-otp", "/api/auth/send-otp"];
         const verify = new TokenHandler();
         let isNotApiAuthPath = false;
         verify.init();
@@ -65,7 +80,7 @@ export const middleware = async (request: NextRequest, response: NextResponse) =
         const webResponse = NextResponse.next({
             headers
         });
-        const webNotLoginPath = ["/auth/register", "/auth/login", "/auth/activate/:slug", "/auth/integrations/google/oauth2/callback"];
+        const webNotLoginPath = ["/auth/register", "/auth/login", "/auth/activate/:slug", "/auth/integrations/google/oauth2/callback", "/auth/login-otp"];
         const verify = new TokenHandler();
         let isNotWebLoginPath = false;
         webNotLoginPath.some(path => {
@@ -111,6 +126,15 @@ export const middleware = async (request: NextRequest, response: NextResponse) =
             }
         }
         else if(isNotWebLoginPath) {
+            if(currentPath.startsWith('/auth/login-otp')) {
+                if(await verify.validateOTP() === false) {
+                    const response = NextResponse.redirect(new URL('/auth/login', request.url));
+                    return response;
+                }
+            }
+            else if(await verify.validateOTP()) {
+                return NextResponse.redirect(new URL('/auth/login-otp', request.url));
+            }
             if(validated !== false) {
                 const response = NextResponse.redirect(new URL('/', request.url));
                 return response;

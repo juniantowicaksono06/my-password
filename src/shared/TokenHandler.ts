@@ -3,16 +3,21 @@ import { cookies } from "next/headers";
 import { jwtVerify } from "jose";
 import { decryptStringV2 } from "./function";
 class TokenHandler {
+    private encryptedOTPToken: string | undefined;
     private encryptedAccessToken: string | undefined;
     private encryptedRefreshToken: string | undefined;
     private accessRawJWT: string | undefined;
     private refreshRawJWT: string | undefined;
+    private jwtOTPPayload: {
+        userID: string
+    } | undefined;
     private jwtAccessPayload: Forms.IUserData | undefined;
     private jwtRefreshPayload: Forms.IUserData | undefined;
+    private decryptedOTPToken: string | undefined;
     private decryptedAccessToken: string | undefined;
     private decryptedRefreshToken: string | undefined;
 
-    init(accessToken: string | null = null, refreshToken: string | null = null) {
+    init(accessToken: string | null = null, refreshToken: string | null = null, otptoken: string | null = null) {
         const cookieStore = cookies();
         if(accessToken === null) {
             this.encryptedAccessToken = cookieStore.get("accessToken")?.value;
@@ -25,6 +30,12 @@ class TokenHandler {
         }
         else {
             this.refreshRawJWT = refreshToken as string;
+        }
+        if(otptoken === null) {
+            this.encryptedOTPToken = cookieStore.get("otpAccess")?.value;
+        }
+        else {
+            this.encryptedOTPToken = otptoken as string;
         }
         return this;
     }
@@ -81,6 +92,34 @@ class TokenHandler {
         }
     }
 
+    async validateOTP(encrypted = true) {
+        try {
+            var token;
+            if(encrypted) {
+                if(this.encryptedOTPToken === undefined) {
+                    return false;
+                }
+                const decryptedOTPToken = await decryptStringV2(this.encryptedOTPToken, process.env.OTP_KEY as string);
+                if(decryptedOTPToken === null) {
+                    throw new Error("OTP Token is invalid");
+                }
+                token = decryptedOTPToken;
+            }
+            else {
+                token = this.encryptedOTPToken;
+            }
+            const otpSecretKey = new TextEncoder().encode(process.env.JWT_OTP as string);
+            const otpPayload = await jwtVerify(token as string, otpSecretKey);
+            this.decryptedOTPToken = token;
+            this.jwtOTPPayload = otpPayload['payload'] as unknown as {
+                userID: string
+            };
+            return true;
+        } catch (error) {
+            return false;
+        }
+    }
+
     async validate() {
         if(await this.validateAccess() && await this.validateRefresh()) {
             return true;
@@ -102,6 +141,12 @@ class TokenHandler {
 
     getRefreshToken() {
         return this.decryptedRefreshToken;
+    }
+    getOTPToken() {
+        return this.decryptedOTPToken;
+    }
+    getOTPPayload() {
+        return this.jwtOTPPayload;
     }
 }
 

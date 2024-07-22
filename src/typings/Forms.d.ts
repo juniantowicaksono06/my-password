@@ -27,4 +27,10 @@ namespace Forms {
     interface IPasswordExtends extends Forms.IPasswords {
         passwordVisible: boolean
     }
+
+    interface IUserKeys {
+        userID: Types.ObjectId | string;
+        publicKey: string;
+        privateKey: string;
+    }
 }

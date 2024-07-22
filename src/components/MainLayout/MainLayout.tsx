@@ -17,11 +17,11 @@ export default function MainLayout({
     const [sidebarOpen, setSidebarOpen] = useState(false);
     const {state, dispatch} = useLoading();
     const pathname = usePathname();
-    const authenticatePath = ["/auth/login", "/auth/register"];
+    const authenticatePath = ["/auth/login", "/auth/register", "/auth/login-otp"];
     // const Header = React.lazy(() => import("../Header"));
     // const Sidebar = React.lazy(() => import("../Sidebar"));
     return (
-        authenticatePath.includes(pathname.toLowerCase()) ?
+        authenticatePath.includes(pathname.toLowerCase()) || pathname.toLowerCase().startsWith("/auth/activate") ?
             <div className="w-full h-full overflow-auto py-10">
                 {children}
             </div>
