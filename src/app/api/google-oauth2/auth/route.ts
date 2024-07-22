@@ -47,7 +47,7 @@ export async function POST(req: Request, res: Response) {
                 }
             });
             // await ConnectDB();
-            const dbMain = new Database();
+            const dbMain = new Database("main");
             dbMain.initModel();
             const {userCollection, userTokenCollection, loginOTPCollection} = dbMain.getModels();
             const userProfile = userProfileResponse.data;
