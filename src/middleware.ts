@@ -148,6 +148,7 @@ export const middleware = async (request: NextRequest, response: NextResponse) =
             }
         }
         else {
+            console.log("Current Path", currentPath);
             return forceLogout(request, webResponse);
         }
     }
