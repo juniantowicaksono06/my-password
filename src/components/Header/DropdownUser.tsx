@@ -2,12 +2,15 @@ import { useEffect, useRef, useState } from 'react';
 import Link from 'next/link';
 import Skeleton, {SkeletonTheme} from 'react-loading-skeleton';
 import 'react-loading-skeleton/dist/skeleton.css';
+import { useLoading } from '../MainLayout/LoadingProvider';
+import Swal from 'sweetalert2';
 
 // import UserOne from '../../images/user/user-01.png';
 
 const DropdownUser = (props: {
   profile: undefined | Forms.IUserData
 }) => {
+  const {state, dispatch} = useLoading();
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const [profilePicture, setProfilePicture] = useState('');
   const [imageLoaded, setImageLoaded] = useState(false);
@@ -149,8 +152,33 @@ const DropdownUser = (props: {
             </Link>
           </li>
         </ul>
-        <button className="flex items-center gap-3.5 px-6 py-4 text-sm font-medium duration-300 ease-in-out hover:text-primary lg:text-base" onClick={() => {
-          window.location.href = '/auth/logout'
+        <button className="flex items-center gap-3.5 px-6 py-4 text-sm font-medium duration-300 ease-in-out hover:text-primary lg:text-base" onClick={async() => {
+          
+            dispatch({type: 'startLoading'});
+            const response = await fetch(`${window.location.origin}/api/auth/logout`, {
+              method: "GET",
+            });
+
+            if(response.ok) {
+              const result = await response.json() as {
+                code: number,
+                data: AppType.IAppMenu[]
+              };
+              if(result.code == 200) {
+                window.location.href = '/auth/login';
+              }
+            }
+            else {
+              dispatch({type: 'stopLoading'});
+              Swal.fire({
+                title: "Error",
+                text: "Something went wrong!",
+                icon: "error",
+                confirmButtonText: "Ok"
+              })
+              return false;
+            }
+
         }}>
           <svg
             className="fill-current"
