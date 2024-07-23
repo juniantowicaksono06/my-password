@@ -72,7 +72,7 @@ export async function POST(req: Request, res: Response) {
                 myCrypto.generateNewPair();
 
                 await userKeysCollection?.create({
-                    userID: user!._id,
+                    userID: insertedId,
                     publicKey: await encryptStringV2(myCrypto.getPublicKey(), process.env.USER_PUBLIC_KEY as string),
                     privateKey: await encryptStringV2(myCrypto.getPrivateKey(), process.env.USER_PRIVATE_KEY as string)
                 })

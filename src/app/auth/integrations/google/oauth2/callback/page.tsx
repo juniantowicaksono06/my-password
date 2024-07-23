@@ -36,8 +36,8 @@ const CallbackPage = () => {
                         window.location.href = '/auth/login';
                     },
                     icon: "error",
-                    toast: true,
-                    showConfirmButton: false,
+                    toast: false,
+                    showConfirmButton: true,
                 })
             }
         }
