@@ -30,6 +30,7 @@ export async function POST(req: Request, res: Response) {
     const clientId = process.env.GOOGLE_OAUTH_CLIENT_ID as string
     const clientSecret = process.env.GOOGLE_OAUTH_SECRET as string
     var insertedId: Types.ObjectId | null = null;
+    var insert = false;
     try {
         const result = await axios.post<{
             access_token: string,
@@ -79,7 +80,11 @@ export async function POST(req: Request, res: Response) {
                     userID: insertedId,
                     publicKey: await encryptStringV2(myCrypto.getPublicKey(), process.env.USER_PUBLIC_KEY as string),
                     privateKey: await encryptStringV2(myCrypto.getPrivateKey(), process.env.USER_PRIVATE_KEY as string)
-                })
+                });
+                insert = true;
+            }
+            else {
+                insertedId = user._id;
             }
 
             const currentDate = new Date();
@@ -140,8 +145,7 @@ export async function POST(req: Request, res: Response) {
     }
     catch(error) {
         console.error(error);
-
-        if(insertedId !== null) {
+        if(insert) {
             const dbMain = new Database("main");
             dbMain.initModel();
             const {userCollection} = dbMain.getModels();
