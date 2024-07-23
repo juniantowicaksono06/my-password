@@ -92,7 +92,7 @@ export async function POST(req: Request, res: Response) {
             
             // Set every otp as invalid for the current logged in user
             await loginOTPCollection!.updateMany({
-                userID: user!['_id']
+                userID: insertedId
             }, {
                 $set: {
                     isActive: false
@@ -100,14 +100,14 @@ export async function POST(req: Request, res: Response) {
             });
 
             await loginOTPCollection!.create({
-                userID: user!['_id'],
+                userID: insertedId,
                 otp: otpCode,
                 validUntil: currentDate.toDateString(),
                 isActive: true
             })
 
             const otpAccess = await new SignJWT({
-                userID: user!['_id']
+                userID: insertedId
             }).setProtectedHeader({
                 alg: 'HS256',
                 typ: 'JWT'
@@ -140,7 +140,6 @@ export async function POST(req: Request, res: Response) {
     }
     catch(error) {
         console.error(error);
-        
 
         if(insertedId !== null) {
             const dbMain = new Database("main");
