@@ -28,11 +28,15 @@ const forceLogout = (req: NextRequest, res: NextResponse) => {
     //     maxAge: -1
     // });
     let cookieList = cookieStore.getAll()
+    
+    console.log("deleting accessToken and refreshToken");
     cookieList.forEach(cookie => {
         if(cookie.name != "otpAccess") {
             response.cookies.delete(cookie.name)
         }
-    })
+    });
+    
+    console.log("Logout");
     return response
 }
 
@@ -128,14 +132,17 @@ export const middleware = async (request: NextRequest, response: NextResponse) =
         else if(isNotWebLoginPath) {
             if(currentPath.startsWith('/auth/login-otp')) {
                 if(await verify.validateOTP() === false) {
-                    const response = NextResponse.redirect(new URL('/auth/login', request.url));
+                console.log("Redirect to login");
+                const response = NextResponse.redirect(new URL('/auth/login', request.url));
                     return response;
                 }
             }
             else if(await verify.validateOTP()) {
+                console.log("Redirect to login otp");
                 return NextResponse.redirect(new URL('/auth/login-otp', request.url));
             }
             if(validated !== false) {
+                console.log("Redirect to home page");
                 const response = NextResponse.redirect(new URL('/', request.url));
                 return response;
             }

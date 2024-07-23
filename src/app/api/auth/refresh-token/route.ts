@@ -1,8 +1,9 @@
 
-import { ConnectDB, userTokenCollection, userCollection } from "@/src/database";
+// import { ConnectDB, userTokenCollection, userCollection } from "@/src/database";
 import TokenHandler from "@/src/shared/TokenHandler";
 import Joi from "@hapi/joi";
 import { SignJWT } from "jose";
+import Database from '@/src/database/database';
 
 
 export async function POST(req: Request, res: Response) {
@@ -33,11 +34,12 @@ export async function POST(req: Request, res: Response) {
         });
     }
     try {
-        await ConnectDB();
-        const refreshTokenDB = await userTokenCollection.findOne({
+        const dbMain = new Database('main');
+        dbMain.initModel();
+        const {userTokenCollection, userCollection } = dbMain.getModels();
+        const refreshTokenDB = await userTokenCollection!.findOne({
             token: data['refreshToken']
         });
-        var accessToken = "";
         if(refreshTokenDB) {
             var tokenHandler = new TokenHandler();
             tokenHandler.init(null, data['refreshToken']);
@@ -46,7 +48,7 @@ export async function POST(req: Request, res: Response) {
             }
             const refreshPayload= tokenHandler.getRefreshPayload() as Forms.IUserData;
             const userID = refreshPayload['userID'];
-            const user = await userCollection.findOne({
+            const user = await userCollection!.findOne({
                 _id: userID
             });
             if(user == null) {
