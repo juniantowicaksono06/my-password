@@ -58,15 +58,17 @@ export async function POST(req: Request, res: Response) {
                 email: userProfile['email']
             });
             if(!user) {
+                insertedId = new Types.ObjectId();
                 let insertUser = new userCollection!({
+                    _id: insertedId,
                     fullname: userProfile.name,
                     picture: userProfile.picture,
                     email: userProfile.email,
                     userStatus: 1,
                     userCreatedType: 'oauth-google'
                 });
-                const inserted = await insertUser.save();
-                insertedId = inserted._id;
+                await insertUser.save();
+                // insertedId = inserted._id;
                 const dbKeys = new Database();
                 dbKeys.createConnection('keys').initModel();
                 const { userKeysCollection } = dbKeys.getModels();
