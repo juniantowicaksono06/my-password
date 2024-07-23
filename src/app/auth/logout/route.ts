@@ -1,6 +1,8 @@
 import { cookies } from 'next/headers';
 import { NextResponse, type NextRequest } from 'next/server';
 
+export const dynamic = 'force-dynamic';
+
 export async function GET(req: NextRequest) {
     if (req.method !== 'GET') {
         return NextResponse.json({ error: 'Method not allowed' }, { status: 405 });
