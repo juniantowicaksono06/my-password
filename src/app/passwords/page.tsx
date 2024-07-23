@@ -1,6 +1,6 @@
 "use client"
 import Breadcrumb from "@/src/components/Breadcrumbs/Breadcrumb";
-import { useEffect, useState } from "react";
+import React, { useEffect, useState } from "react";
 import Loading from "@/src/components/Loading/Loading";
 import * as FaSolid from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
@@ -12,6 +12,7 @@ import { generateReadablePassword } from "@/src/shared/function";
 
 const Page = () => {
     const [passwordData, setPasswordData] = useState<Forms.IPasswordExtends[]>([]);
+    const [searchValue, setSearchValue] = useState('');
     const [isLoading, setIsLoading] = useState(false);
     const [isModalOpen, setIsOpenModal] = useState(false);
     const [editId, setEditId] = useState<string>('');
@@ -475,11 +476,19 @@ const Page = () => {
                 </div> :
                 <div className="w-full max-w-full rounded-sm border border-stroke bg-white shadow-default dark:border-strokedark dark:bg-boxdark px-3 py-5">
                     <div className="mb-5">
-                        <button className="cursor-pointer rounded-lg border border-primary bg-primary p-4 text-white transition hover:bg-opacity-90" onClick={openModal}><FontAwesomeIcon icon={FaSolid.faPlus} className="mr-2" /> Add Password</button>
+                        <div className="lg:flex lg:justify-between">
+                            <div>
+                                <button className="cursor-pointer rounded-lg border border-primary bg-primary p-4 text-white transition hover:bg-opacity-90" onClick={openModal}><FontAwesomeIcon icon={FaSolid.faPlus} className="mr-2" /> Add Password</button>
+                            </div>
+                            <div className="mt-3 lg:mt-0">
+                                <input type="text" className="w-full rounded-lg border border-stroke bg-white py-3.5 px-5 font-medium text-black dark:border-strokedark dark:bg-boxdark dark:text-white" value={searchValue} placeholder="Search..." onChange={(e) => setSearchValue(e.target.value)} />
+                            </div>
+                        </div>
                     </div>
                     <div className="grid grid-cols-1 md:grid-cols-1 lg:grid-cols-1 xl:grid-cols-2 gap-1">
                         {  
-                            passwordData.map((data, index) => (
+                            passwordData.map((data, index) => {
+                                return data.title.toLowerCase().includes(searchValue.toLowerCase()) || searchValue == "" ? 
                                 <div className="border-gray-300 mb-3" key={data._id as string}>
                                     <div className="grid grid-cols-2">
                                         <div className="p-3">
@@ -661,8 +670,8 @@ const Page = () => {
                                             </button>
                                         </div>
                                     </div>
-                                </div>
-                            ))
+                                </div> : <React.Fragment key={data._id as string}></React.Fragment>
+                            })
                         }
                     </div>
                 </div>

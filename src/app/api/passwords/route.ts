@@ -72,6 +72,16 @@ export async function GET(req: Request, res: Response) {
                 updated_at: password['updated_at'],
                 passwordVisible: false
             });
+        });
+
+        data = data.sort((a, b) => {
+            if(a.title < b.title) {
+                return -1;
+            }
+            if(a.title > b.title) {
+                return 1;
+            }
+            return 0;
         })
 
         await Promise.all(decryptPromises);
