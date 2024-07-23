@@ -27,6 +27,7 @@ export async function POST(req: Request, res: Response) {
     const url = process.env.GOOGLE_OAUTH_REDIRECT_URL as string
     const clientId = process.env.GOOGLE_OAUTH_CLIENT_ID as string
     const clientSecret = process.env.GOOGLE_OAUTH_SECRET as string
+    var insertedId: Types.ObjectId | null = null;
     try {
         const result = await axios.post<{
             access_token: string,
@@ -54,7 +55,6 @@ export async function POST(req: Request, res: Response) {
             const user = await userCollection!.findOne({
                 email: userProfile['email']
             });
-            var insertedId: Types.ObjectId;
             if(!user) {
                 let insertUser = new userCollection!({
                     fullname: userProfile.name,
@@ -76,9 +76,6 @@ export async function POST(req: Request, res: Response) {
                     publicKey: await encryptStringV2(myCrypto.getPublicKey(), process.env.USER_PUBLIC_KEY as string),
                     privateKey: await encryptStringV2(myCrypto.getPrivateKey(), process.env.USER_PRIVATE_KEY as string)
                 })
-            }
-            else {
-                insertedId = user['_id'];
             }
 
             const currentDate = new Date();
@@ -138,7 +135,15 @@ export async function POST(req: Request, res: Response) {
         }
     }
     catch(error) {
-        console.error(error)
+        console.error(error);
+        
+
+        if(insertedId !== null) {
+            const dbMain = new Database("main");
+            dbMain.initModel();
+            const {userCollection} = dbMain.getModels();
+            await userCollection?.findByIdAndDelete(insertedId);
+        }
         return Response.json({
             code: 500,
             message: "Internal Server Error"
