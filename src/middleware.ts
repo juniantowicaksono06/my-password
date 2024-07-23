@@ -32,7 +32,7 @@ const forceLogout = (req: NextRequest, res: NextResponse) => {
     console.log("deleting accessToken and refreshToken");
     cookieList.forEach(cookie => {
         if(cookie.name != "otpAccess") {
-            // response.cookies.delete(cookie.name)
+            response.cookies.delete(cookie.name)
         }
     });
     
