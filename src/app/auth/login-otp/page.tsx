@@ -1,12 +1,15 @@
 "use client"
 import React, {useEffect, useState} from 'react';
-import Link from 'next/link';
 import { Formik, Form, Field } from 'formik';
 import * as Yup from 'yup';
 import swal, {SweetAlertIcon, SweetAlertPosition} from 'sweetalert2';
 import Loading from '@/src/components/Loading/Loading';
-import crypto from 'crypto';
+import { useLoading } from '@/src/components/MainLayout/LoadingProvider';
+
 const LoginOTP = () => {
+
+    const [timerSendOtp, setTimerSendOtp] = useState(0);
+    const [isLoading, setIsLoading] = useState(false);
     
     const initialValues = {
         otp: ""
@@ -15,7 +18,49 @@ const LoginOTP = () => {
         otp: Yup.number()
         .required('Input is required')
     });
+    const {state, dispatch} = useLoading();
+
+    async function getOTPTimer() {
+        dispatch({type: 'startLoading'});
+        const res = await fetch(window.location.origin);
+        if(res.ok) {
+            const result = res.headers;
+            const userID = result.get('X-USER-DATA');
+            const response = await fetch(`${window.location.origin}/api/redis/keys/otp_${process.env.ENVIRONMENT}_${userID}`, {
+                method: "GET"
+            });
+            if(response.ok) {   
+                const result = await response.json() as {
+                    code: number,
+                    data: {
+                        value: string,
+                        ttl: number
+                    }
+                };
+                if(result.code == 200) {
+                    let timer = result['data']['ttl'];
+                    setTimerSendOtp(timer);
+                    var interval = setInterval(() => {
+                        setTimerSendOtp(timer);
+                        if(timer == 0) {
+                            clearInterval(interval);
+                        }
+                        timer--;
+                    }, 1000);
+                    timer -= 1;
+                    setTimerSendOtp(timer);
+                }
+            }
+        }
+        dispatch({type: 'stopLoading'});
+        // if(response.ok) {
+            
+        // }
+    }
+
     useEffect(() => {
+        getOTPTimer();
+        dispatch({type: 'stopLoading'});
         const flash_success = sessionStorage.getItem('flash_success');
         if(flash_success) {
             sessionStorage.removeItem('flash_success')
@@ -27,7 +72,6 @@ const LoginOTP = () => {
         }
     }, []);
 
-    const [isLoading, setIsLoading] = useState(false)
 
     return (<>
         <Loading isLoading={isLoading} />
@@ -137,9 +181,68 @@ const LoginOTP = () => {
                                 />
                                 </div>
 
-                                <button className="flex w-full items-center justify-center gap-3.5 rounded-lg border border-stroke bg-gray p-4 hover:bg-opacity-50 dark:border-strokedark dark:bg-meta-4 dark:hover:bg-opacity-50" onClick={() => {
+                                <button className="flex w-full items-center justify-center gap-3.5 rounded-lg border border-stroke bg-gray p-4 hover:bg-opacity-50 dark:border-strokedark dark:bg-meta-4 dark:hover:bg-opacity-50" onClick={async () => {
+                                    if(timerSendOtp > 0) return;
+                                    setIsLoading(true);
+                                    const response = await fetch(`${window.location.origin}/api/auth/send-otp`, {
+                                        method: "POST"
+                                    });
+                                    setIsLoading(false);
+                                    if(response.ok) {
+                                        const result: {
+                                            code: number,
+                                            message: string
+                                        } = await response.json();
+                                        let icon: SweetAlertIcon | undefined = "success";
+                                        let didCloseFn: undefined | (() => void) = () => {
+                                            let timer = 60;
+                                            setTimerSendOtp(timer);
+                                            var interval = setInterval(() => {
+                                                setTimerSendOtp(timer);
+                                                if(timer == 0) {
+                                                    clearInterval(interval);
+                                                }
+                                                timer--;
+                                            }, 1000);
+                                            timer -= 1;
+                                            setTimerSendOtp(timer);
+                                        }
+                                        let toast = false;
+                                        let showConfirmButton = false;
+                                        let position: SweetAlertPosition = 'center';
+                                        if(result.code != 200) {
+                                            icon = "warning";
+                                            showConfirmButton = true;
+                                            toast = false;
+                                            position = 'center';
+                                            didCloseFn = undefined;
+                                        }
+                                        swal.fire({
+                                            title: "Success",
+                                            text: result.message,
+                                            icon: icon,
+                                            timer: 3000,
+                                            toast: toast,
+                                            showConfirmButton: showConfirmButton,
+                                            position: position,
+                                            didClose: didCloseFn
+                                        });
+                                    }
+                                    else {
+                                        const result: {
+                                            code: number,
+                                            message: string
+                                        } = await response.json();
+                                        swal.fire({
+                                            title: "Failed to send OTP",
+                                            icon: "error",
+                                            text: result.message
+                                        });
+                                    }
                                 }}>
-                                    Resend OTP
+                                    {
+                                        timerSendOtp > 0 ? <span>You can resend OTP in {timerSendOtp} {timerSendOtp > 1 ? "seconds" : "second"}</span> : <span>Resend OTP</span>
+                                    }
                                 </button>
                             </Form>
                         </Formik>

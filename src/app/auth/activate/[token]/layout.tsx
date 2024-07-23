@@ -22,7 +22,6 @@ async function activate() {
   const dbMain = new Database('main');
   dbMain.initModel();
   const {userCollection} = dbMain.getModels();
-  console.log(token)
   const query = await userCollection!.findOne({
     userStatus: {
       $ne: 1,

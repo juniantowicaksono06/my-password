@@ -22,9 +22,12 @@ export default function MainLayout({
     // const Sidebar = React.lazy(() => import("../Sidebar"));
     return (
         authenticatePath.includes(pathname.toLowerCase()) || pathname.toLowerCase().startsWith("/auth/activate") ?
-            <div className="w-full h-full overflow-auto py-10">
-                {children}
-            </div>
+            <>
+                <Loader visibility={state.loading ? "block" : "hidden"} />
+                <div className="w-full h-full overflow-auto py-10">
+                    {children}
+                </div>
+            </>
         :
         <>
             <Loader visibility={state.loading ? "block" : "hidden"} />

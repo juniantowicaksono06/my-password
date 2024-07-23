@@ -2,6 +2,7 @@ import Database from '@/src/database/database';
 import TokenHandler from '@/src/shared/TokenHandler';
 import { generateOTP } from '@/src/shared/function';
 import Email from '@/src/shared/Email';
+import RedisClient from '@/src/database/redis';
 
 
 export async function POST(req: Request, res: Response) {
@@ -12,7 +13,6 @@ export async function POST(req: Request, res: Response) {
             const OTPPayload = verify.getOTPPayload();
             const currentDate = new Date();
             currentDate.setDate(currentDate.getDate() + 30);
-            const otpSecretKey = new TextEncoder().encode(process.env.JWT_OTP as string);
             const otpCode = generateOTP();
 
             
@@ -41,7 +41,12 @@ export async function POST(req: Request, res: Response) {
             })
 
             try {
+                const environment = process.env.ENV;
                 const email = new Email();
+                const client = RedisClient();
+                await client.set(`otp_${environment}_${user!._id}`, "OTP", {
+                    EX: 60
+                });
                 email.init();
                 email.sendEmail(user!.email as string, `Hello, ${user!.fullname}`, "", `Here is your OTP Code to login: ${otpCode}`);
             } catch (error) {
@@ -50,7 +55,7 @@ export async function POST(req: Request, res: Response) {
 
             return Response.json({
                 code: 200,
-                message: "OTP Send to your email"
+                message: "An OTP code was succesfully send to your email!"
             }, {
                 status: 200
             });
@@ -58,7 +63,7 @@ export async function POST(req: Request, res: Response) {
         else {
             return Response.json({
                 code: 401,
-                message: "Invalid OTP"
+                message: "Failed to send OTP Code"
             }, {
                 status: 401
             });

@@ -46,7 +46,7 @@ export const middleware = async (request: NextRequest, response: NextResponse) =
     headers.set("x-current-href", request.nextUrl.href);
     headers.set("x-current-path", request.nextUrl.pathname);
     if(currentPath.startsWith('/api')) {
-        const notRequiredAuth = ["/api/auth/login", "/api/auth/refresh-token", "/api/auth/register", "/api/google-oauth2/auth", "/api/profile-picture-upload", "/api/test", "/api/auth/verify-otp", "/api/auth/send-otp"];
+        const notRequiredAuth = ["/api/auth/login", "/api/auth/refresh-token", "/api/auth/register", "/api/google-oauth2/auth", "/api/profile-picture-upload", "/api/test", "/api/auth/verify-otp", "/api/auth/send-otp", "/api/redis/keys", "/api/redis/keys/:slug"];
         const verify = new TokenHandler();
         let isNotApiAuthPath = false;
         verify.init();
@@ -134,6 +134,12 @@ export const middleware = async (request: NextRequest, response: NextResponse) =
                 if(await verify.validateOTP() === false) {
                 console.log("Redirect to login");
                 const response = NextResponse.redirect(new URL('/auth/login', request.url));
+                    return response;
+                }
+                else {
+                    const response = NextResponse.next();
+                    const data: string = verify.getOTPPayload()!['userID'] as string;
+                    response.headers.set('X-USER-DATA', data);
                     return response;
                 }
             }

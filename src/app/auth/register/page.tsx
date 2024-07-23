@@ -7,21 +7,26 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 
 import * as faRegular from '@fortawesome/free-regular-svg-icons';
 import crypto from 'crypto';
-import { useState, useRef } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import ImageCropper from '@/src/components/ImageCropper/ImageCropper';
 import { Formik, Form, Field } from 'formik';
 import * as Yup from 'yup';
 import swal from 'sweetalert2';
 import Loading from '@/src/components/Loading/Loading';
+import { useLoading } from '@/src/components/MainLayout/LoadingProvider';
 
 const Register = () => {
     const [uploadedImgUrl, setUploadedImgUrl] = useState("");
+    const {state, dispatch} = useLoading();
     const [openCropper, setOpenCropper] = useState(false);
     const [imageUrl, setImageUrl] = useState("");
     const [isLoading, setIsLoading] = useState(false);
     const inputFileRef = useRef<HTMLInputElement>(null);
 
-
+    useEffect(() => {
+        dispatch({type: 'stopLoading'});
+    }, []);
+    
     const registerSchema = Yup.object().shape({
         email: Yup.string()
         .email('Not a valid email address')

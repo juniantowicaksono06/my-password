@@ -60,8 +60,6 @@ export default async function RootLayout({
         ssr: true
       }
     );
-    const headerList = headers();
-    const pathname = headerList.get('x-current-path');
     return <>
       <html>
         <body className="">

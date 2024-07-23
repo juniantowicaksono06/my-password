@@ -5,7 +5,8 @@ const nextConfig = {
         GOOGLE_OAUTH_CLIENT_ID: process.env.GOOGLE_OAUTH_CLIENT_ID,
         GOOGLE_SECRET: process.env.GOOGLE_SECRET,
         RESIZE_IMAGE_WIDTH: process.env.RESIZE_IMAGE_WIDTH,
-        RESIZE_IMAGE_HEIGHT: process.env.RESIZE_IMAGE_HEIGHT
+        RESIZE_IMAGE_HEIGHT: process.env.RESIZE_IMAGE_HEIGHT,
+        ENVIRONMENT: process.env.ENV
     },
     reactStrictMode: false,
     images: {

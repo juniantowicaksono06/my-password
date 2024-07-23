@@ -6,8 +6,10 @@ import * as Yup from 'yup';
 import swal, {SweetAlertIcon, SweetAlertPosition} from 'sweetalert2';
 import Loading from '@/src/components/Loading/Loading';
 import crypto from 'crypto';
+import { useLoading } from '@/src/components/MainLayout/LoadingProvider';
 const Login = () => {
     
+    const {state, dispatch} = useLoading();
     const initialValues = {
         password: "",
         email: ""
@@ -20,6 +22,7 @@ const Login = () => {
         .required('Input is required')
     });
     useEffect(() => {
+        dispatch({type: 'stopLoading'});
         const flash_success = sessionStorage.getItem('flash_success');
         if(flash_success) {
             sessionStorage.removeItem('flash_success')
