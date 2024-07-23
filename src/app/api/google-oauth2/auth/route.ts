@@ -10,6 +10,8 @@ import { encryptStringV2, generateOTP } from "@/src/shared/function";
 import Email from "@/src/shared/Email";
 import Cryptography from "@/src/shared/Cryptography";
 
+export const maxDuration = 60;
+
 export async function POST(req: Request, res: Response) {
     const schema = Joi.object({
         code: Joi.string().required()
