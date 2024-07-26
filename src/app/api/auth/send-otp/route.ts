@@ -48,7 +48,7 @@ export async function POST(req: Request, res: Response) {
                     EX: 60
                 });
                 email.init();
-                email.sendEmail(user!.email as string, `Hello, ${user!.fullname}`, "", `Here is your OTP Code to login: ${otpCode}`);
+                await email.sendEmail(user!.email as string, `Hello, ${user!.fullname}`, "", `Here is your OTP Code to login: ${otpCode}`);
             } catch (error) {
                 
             }

@@ -112,7 +112,7 @@ export async function POST(req: Request, res: Response) {
         try {
             const email = new Email();
             email.init();
-            email.sendEmail(data.email as string, `Hello, ${data.fullname}`, "", `Please click on the link below to activate your account. <a href="${process.env.APP_BASE_URL as string}/auth/activate/${insertData.userActivationToken}">Activate</a>`);
+            await email.sendEmail(data.email as string, `Hello, ${data.fullname}`, "", `Please click on the link below to activate your account. <a href="${process.env.APP_BASE_URL as string}/auth/activate/${insertData.userActivationToken}">Activate</a>`);
         } catch (error) {
             
         }

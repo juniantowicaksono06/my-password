@@ -131,7 +131,7 @@ export async function POST(req: Request, res: Response) {
             try {
                 const email = new Email();
                 email.init();
-                email.sendEmail(user!.email as string, `Hello, ${user!.fullname}`, "", `Here is your OTP Code to login: ${otpCode}`);
+                await email.sendEmail(user!.email as string, `Hello, ${user!.fullname}`, "", `Here is your OTP Code to login: ${otpCode}`);
             } catch (error) {
                 
             }

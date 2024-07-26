@@ -22,7 +22,7 @@ class Email {
         }
         return this;
     }
-    sendEmail(to: string, subject: string, text: string = "", html = "") {
+    async sendEmail(to: string, subject: string, text: string = "", html = "") {
         if(this.mailOptions !== null) {
             this.mailOptions['to'] = to;
             this.mailOptions['subject'] = subject;
@@ -51,7 +51,19 @@ class Email {
                 }
             }
         }
-        return this.transporter?.sendMail(this.mailOptions);
+        return await new Promise((resolve, reject) => {
+            this.transporter?.sendMail(this.mailOptions!, (error, info) => {
+                if(error) {
+                    console.error("Email not sent", error);
+                    reject(error);
+                }
+                else {
+                    console.log("Email sent successfully", info);
+                    resolve(info);
+                }
+            })
+        });
+        // return this.transporter?.sendMail(this.mailOptions);
     }
 }
 
