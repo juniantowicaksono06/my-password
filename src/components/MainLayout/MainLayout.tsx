@@ -6,6 +6,7 @@ import Header from "../Header";
 import Sidebar from "../Sidebar";
 import {useLoading } from "./LoadingProvider";
 import Loader from "../Loader/Loader";
+import { usePageLoading } from "./PageLoadingProvider";
 
 export default function MainLayout({
     children,
@@ -15,11 +16,10 @@ export default function MainLayout({
     profile: undefined | Forms.IUserData;
   }>) {
     const [sidebarOpen, setSidebarOpen] = useState(false);
-    const {state, dispatch} = useLoading();
+    const { state } = useLoading();
+    const { pageLoadingState } = usePageLoading();
     const pathname = usePathname();
     const authenticatePath = ["/auth/login", "/auth/register", "/auth/login-otp"];
-    // const Header = React.lazy(() => import("../Header"));
-    // const Sidebar = React.lazy(() => import("../Sidebar"));
     return (
         authenticatePath.includes(pathname.toLowerCase()) || pathname.toLowerCase().startsWith("/auth/activate") ?
             <>
@@ -39,15 +39,14 @@ export default function MainLayout({
                         {/* HEADER */}
                         <Header sidebarOpen={sidebarOpen} setSidebarOpen={setSidebarOpen} profile={profile} />  
                         <main>
-                            <div className="mx-auto max-w-screen-2xl p-4 md:p-6 2xl:p-10">
+                            <Loader visibility={pageLoadingState.loading == true ? "block" : "hidden"} />
+                            <div className={pageLoadingState.loading == true ? "mx-auto max-w-screen-2xl p-4 md:p-6 2xl:p-10 hidden": "mx-auto max-w-screen-2xl p-4 md:p-6 2xl:p-10 block"}>
                                 {children}
                             </div>
                         </main>
                     </div>
                 </div>
             </div>
-            {/* <Suspense fallback={<Loader />}>
-            </Suspense> */}
         </>
     )
 } 

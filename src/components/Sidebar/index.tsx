@@ -1,13 +1,13 @@
 "use client"
 import React, { useEffect, useRef, useState } from 'react';
-import { usePathname } from 'next/navigation';
+import { usePathname, useRouter } from 'next/navigation';
 import Link from 'next/link';
 import Logo from '@/public/logo/logo-no-background.png';
 import Swal from 'sweetalert2';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import * as FaSolid from '@fortawesome/free-solid-svg-icons';
 import { useLoading } from '../MainLayout/LoadingProvider';
-import { useRouter } from 'next/router';
+import { usePageLoading } from '../MainLayout/PageLoadingProvider';
 
 interface SidebarProps {
   sidebarOpen: boolean;
@@ -17,13 +17,13 @@ interface SidebarProps {
 const Sidebar = ({ sidebarOpen, setSidebarOpen }: SidebarProps) => {
   const {state, dispatch} = useLoading();
   const pathname = usePathname();
+  const {pageLoadingDispatch} = usePageLoading();
   // const { pathname } = location;
 
   const trigger = useRef<any>(null);
   const sidebar = useRef<any>(null);
   const [menu, setMenu] = useState([] as AppType.IAppMenu[]);
   const [windowPathname, setWindowPathname] = useState('');
-  const [sidebarLoaded, setSidebarLoaded] = useState(false);
   const router = useRouter();
   const getMenus = async() => {
       dispatch({type: 'startLoading'});
@@ -40,14 +40,15 @@ const Sidebar = ({ sidebarOpen, setSidebarOpen }: SidebarProps) => {
           await Promise.all(
             result.data.map(async (value, index) => {
               if(value.link != '/auth/logout') {
-                await router.prefetch(value.link);
+                await new Promise((resolve) => {
+                  router.prefetch(value.link)
+                }) 
               }
               if(index == result.data.length - 1) {
                 dispatch({type: 'stopLoading'});
               }
             })
           )
-          setSidebarLoaded(true);
         }
         else {
           dispatch({type: 'stopLoading'});
@@ -75,7 +76,11 @@ const Sidebar = ({ sidebarOpen, setSidebarOpen }: SidebarProps) => {
       getMenus();
     }
     setWindowPathname(window.location.pathname);
-  }, [])
+  }, []);
+
+  useEffect(() => {
+    pageLoadingDispatch({type: 'stopLoading'});
+  }, [pathname]);
 
   const [sidebarExpanded, setSidebarExpanded] = useState<boolean|null>(null);
 
@@ -88,7 +93,9 @@ const Sidebar = ({ sidebarOpen, setSidebarOpen }: SidebarProps) => {
     >
       <div className="flex items-center justify-between gap-2 px-8 py-3.5 lg:py-3.5">
         <div className="flex justify-center px-4">
-          <Link href='/'>
+          <Link href='/' onClick={() =>{
+            setWindowPathname('/');
+          }}>
             <img src={Logo.src} alt="logo" className="w-full" />
           </Link>
         </div>
@@ -125,6 +132,7 @@ const Sidebar = ({ sidebarOpen, setSidebarOpen }: SidebarProps) => {
                 return <li key={item._id.toString()}>
                 <button onClick={async(e) => {
                   e.preventDefault();
+                  pageLoadingDispatch({type: 'startLoading'});
                   if(item.link == '/auth/logout') {
                     dispatch({type: 'startLoading'});
                     const response = await fetch(`${window.location.origin}/api/auth/logout`, {

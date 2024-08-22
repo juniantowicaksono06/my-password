@@ -60,13 +60,20 @@ export default async function RootLayout({
         ssr: true
       }
     );
+    const PageLoadingProvider = dynamic(() => 
+      import('@/src/components/MainLayout/PageLoadingProvider'), {
+        ssr: true
+      }
+    );
     return <>
       <html>
         <body className="">
           <LoadingProvider>
-            <MainLayout profile={profile}>
-              {children}
-            </MainLayout>
+            <PageLoadingProvider>
+              <MainLayout profile={profile}>
+                {children}
+              </MainLayout>
+            </PageLoadingProvider>
           </LoadingProvider>
         </body>
       </html>
