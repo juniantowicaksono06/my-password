@@ -7,7 +7,7 @@ import Swal from 'sweetalert2';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import * as FaSolid from '@fortawesome/free-solid-svg-icons';
 import { useLoading } from '../MainLayout/LoadingProvider';
-import { useRouter } from 'next/navigation';
+import { useRouter } from 'next/router';
 
 interface SidebarProps {
   sidebarOpen: boolean;
@@ -92,7 +92,6 @@ const Sidebar = ({ sidebarOpen, setSidebarOpen }: SidebarProps) => {
             <img src={Logo.src} alt="logo" className="w-full" />
           </Link>
         </div>
-        
 
         <button
           ref={trigger}
