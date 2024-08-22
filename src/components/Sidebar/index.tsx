@@ -119,7 +119,7 @@ const Sidebar = ({ sidebarOpen, setSidebarOpen }: SidebarProps) => {
                 const icon = FaSolid[item.icon as keyof typeof FaSolid] as FaSolid.IconDefinition;
                 return <li key={item._id.toString()}>
                 <Link href={item.link} prefetch={true} shallow={true} onClick={(e) => {
-                  e.preventDefault();
+                  // e.preventDefault();
                   setWindowPathname(item.link);
                 }} className={item.link === windowPathname ? 'group relative flex items-center gap-2.5 rounded-sm py-3 px-4 font-medium text-white duration-300 ease-in-out bg-blue-500' : 'group relative flex items-center gap-2.5 rounded-sm py-3 px-4 font-medium text-bodydark2 duration-300 ease-in-out hover:bg-graydark dark:hover:bg-meta-4'}>
                   <span className='mr-3'>
