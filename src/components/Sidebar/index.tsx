@@ -8,7 +8,6 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import * as FaSolid from '@fortawesome/free-solid-svg-icons';
 import { useLoading } from '../MainLayout/LoadingProvider';
 import { useRouter } from 'next/navigation';
-import { Router } from 'next/router';
 
 interface SidebarProps {
   sidebarOpen: boolean;
@@ -41,7 +40,7 @@ const Sidebar = ({ sidebarOpen, setSidebarOpen }: SidebarProps) => {
           await Promise.all(
             result.data.map(async (value, index) => {
               if(value.link != '/auth/logout') {
-                router.prefetch(value.link);
+                await router.prefetch(value.link);
               }
               if(index == result.data.length - 1) {
                 dispatch({type: 'stopLoading'});
