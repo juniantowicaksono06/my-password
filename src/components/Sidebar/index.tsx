@@ -40,11 +40,8 @@ const Sidebar = ({ sidebarOpen, setSidebarOpen }: SidebarProps) => {
           setMenu(result.data);
           await Promise.all(
             result.data.map(async (value, index) => {
-              await fetch(value.link).then(() => {
-                if(index == result.data.length - 1) {
-                  dispatch({type: 'stopLoading'});
-                }
-              });
+              if(value.link == '/auth/logout') return;
+              router.prefetch(value.link);
             })
           )
           setSidebarLoaded(true);
@@ -124,10 +121,35 @@ const Sidebar = ({ sidebarOpen, setSidebarOpen }: SidebarProps) => {
               {menu.map((item, index) => {
                 const icon = FaSolid[item.icon as keyof typeof FaSolid] as FaSolid.IconDefinition;
                 return <li key={item._id.toString()}>
-                <Link href={item.link} prefetch={true} shallow={false} onClick={(e) => {
-                  if(item.link == '/logout') {
-                    dispatch({type: 'startLoading'});
-                    window.location.href = '/logout';
+                <button onClick={async(e) => {
+                  e.preventDefault();
+                  if(item.link == '/auth/logout') {
+                    const response = await fetch(`${window.location.origin}/api/auth/logout`, {
+                      method: "GET",
+                    });
+        
+                    if(response.ok) {
+                      const result = await response.json() as {
+                        code: number,
+                        data: AppType.IAppMenu[]
+                      };
+                      if(result.code == 200) {
+                        window.location.href = '/auth/login';
+                      }
+                    }
+                    else {
+                      dispatch({type: 'stopLoading'});
+                      Swal.fire({
+                        title: "Error",
+                        text: "Something went wrong!",
+                        icon: "error",
+                        confirmButtonText: "Ok"
+                      })
+                      return false;
+                    }
+                  }
+                  else {
+                    router.push(item.link);
                   }
                   setWindowPathname(item.link);
                 }} className={item.link === windowPathname ? 'group relative flex items-center gap-2.5 rounded-sm py-3 px-4 font-medium text-white duration-300 ease-in-out bg-blue-500' : 'group relative flex items-center gap-2.5 rounded-sm py-3 px-4 font-medium text-bodydark2 duration-300 ease-in-out hover:bg-graydark dark:hover:bg-meta-4'}>
@@ -135,7 +157,7 @@ const Sidebar = ({ sidebarOpen, setSidebarOpen }: SidebarProps) => {
                     <FontAwesomeIcon icon={icon} />
                   </span>
                   {item.name}
-                </Link>
+                </button>
               </li>
               })}
             </ul>
