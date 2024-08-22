@@ -8,6 +8,7 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import * as FaSolid from '@fortawesome/free-solid-svg-icons';
 import { useLoading } from '../MainLayout/LoadingProvider';
 import { useRouter } from 'next/navigation';
+import { Router } from 'next/router';
 
 interface SidebarProps {
   sidebarOpen: boolean;
@@ -37,10 +38,15 @@ const Sidebar = ({ sidebarOpen, setSidebarOpen }: SidebarProps) => {
         };
         if(result.code == 200) {
           setMenu(result.data);
-          result.data.forEach((value) => {
-            router.prefetch(`${window.location.origin}/${value.link}`);
-          });
-          dispatch({type: 'stopLoading'});
+          await Promise.all(
+            result.data.map(async (value, index) => {
+              await fetch(value.link).then(() => {
+                if(index == result.data.length - 1) {
+                  dispatch({type: 'stopLoading'});
+                }
+              });
+            })
+          )
           setSidebarLoaded(true);
         }
         else {
