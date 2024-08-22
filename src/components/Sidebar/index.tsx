@@ -124,6 +124,7 @@ const Sidebar = ({ sidebarOpen, setSidebarOpen }: SidebarProps) => {
                 <button onClick={async(e) => {
                   e.preventDefault();
                   if(item.link == '/auth/logout') {
+                    dispatch({type: 'startLoading'});
                     const response = await fetch(`${window.location.origin}/api/auth/logout`, {
                       method: "GET",
                     });
