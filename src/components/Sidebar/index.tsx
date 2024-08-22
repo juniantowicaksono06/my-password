@@ -110,7 +110,7 @@ const Sidebar = ({ sidebarOpen, setSidebarOpen }: SidebarProps) => {
               {menu.map((item, index) => {
                 const icon = FaSolid[item.icon as keyof typeof FaSolid] as FaSolid.IconDefinition;
                 return <li key={item._id.toString()}>
-                <Link shallow href={item.link} prefetch={false} onClick={(e) => {
+                <Link href={item.link} prefetch={true} shallow={true} onClick={(e) => {
                   // e.preventDefault();
                   // router.push(item.link);
                   setWindowPathname(item.link);
