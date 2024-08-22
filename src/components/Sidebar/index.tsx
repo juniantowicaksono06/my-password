@@ -7,6 +7,7 @@ import Swal from 'sweetalert2';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import * as FaSolid from '@fortawesome/free-solid-svg-icons';
 import { useLoading } from '../MainLayout/LoadingProvider';
+import { useRouter } from 'next/navigation';
 
 interface SidebarProps {
   sidebarOpen: boolean;
@@ -23,6 +24,7 @@ const Sidebar = ({ sidebarOpen, setSidebarOpen }: SidebarProps) => {
   const [menu, setMenu] = useState([] as AppType.IAppMenu[]);
   const [windowPathname, setWindowPathname] = useState('');
   const [sidebarLoaded, setSidebarLoaded] = useState(false);
+  const router = useRouter();
   const getMenus = async() => {
       dispatch({type: 'startLoading'});
       const response = await fetch(`${window.location.origin}/api/menu`, {
@@ -36,6 +38,10 @@ const Sidebar = ({ sidebarOpen, setSidebarOpen }: SidebarProps) => {
         };
         if(result.code == 200) {
           setMenu(result.data);
+          result.data.forEach((value) => {
+            // console.log(value.link);
+            router.prefetch(`${window.location.origin}/${value.link}`);
+          });
           setSidebarLoaded(true);
         }
       }
@@ -58,10 +64,6 @@ const Sidebar = ({ sidebarOpen, setSidebarOpen }: SidebarProps) => {
   }, [])
 
   const [sidebarExpanded, setSidebarExpanded] = useState<boolean|null>(null);
-  // const [logo, setLogo] = useState('');
-  // useEffect(() => {
-  //   setLogo(`${window.location.href}/logo/logo-no-background.png`)
-  // }, [])
 
   return (
     <aside
@@ -108,7 +110,9 @@ const Sidebar = ({ sidebarOpen, setSidebarOpen }: SidebarProps) => {
               {menu.map((item, index) => {
                 const icon = FaSolid[item.icon as keyof typeof FaSolid] as FaSolid.IconDefinition;
                 return <li key={item._id.toString()}>
-                <Link href={item.link} prefetch={true} onClick={() => {
+                <Link shallow href={item.link} prefetch={false} onClick={(e) => {
+                  // e.preventDefault();
+                  // router.push(item.link);
                   setWindowPathname(item.link);
                 }} className={item.link === windowPathname ? 'group relative flex items-center gap-2.5 rounded-sm py-3 px-4 font-medium text-white duration-300 ease-in-out bg-blue-500' : 'group relative flex items-center gap-2.5 rounded-sm py-3 px-4 font-medium text-bodydark2 duration-300 ease-in-out hover:bg-graydark dark:hover:bg-meta-4'}>
                   <span className='mr-3'>
