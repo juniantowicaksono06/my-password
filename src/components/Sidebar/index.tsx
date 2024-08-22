@@ -40,8 +40,12 @@ const Sidebar = ({ sidebarOpen, setSidebarOpen }: SidebarProps) => {
           setMenu(result.data);
           await Promise.all(
             result.data.map(async (value, index) => {
-              if(value.link == '/auth/logout') return;
-              router.prefetch(value.link);
+              if(value.link != '/auth/logout') {
+                router.prefetch(value.link);
+              }
+              if(index == result.data.length - 1) {
+                dispatch({type: 'stopLoading'});
+              }
             })
           )
           setSidebarLoaded(true);
