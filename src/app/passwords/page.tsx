@@ -15,8 +15,12 @@ const Page = () => {
     const [searchValue, setSearchValue] = useState('');
     const [isLoading, setIsLoading] = useState(false);
     const [isModalOpen, setIsOpenModal] = useState(false);
+    const [isViewModalOpen, setIsViewModalOpen] = useState(false);
     const [editId, setEditId] = useState<string>('');
     const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+    const [currentDate, setCurrentDate] = useState<Date>(new Date());
+    const [viewData, setViewData] = useState<Forms.IPasswordExtends>({} as Forms.IPasswordExtends);
+    const [viewIndex, setViewIndex] = useState(0);
     const passwordSchema = Yup.object().shape({
         title: Yup.string()
         .min(2)
@@ -91,8 +95,116 @@ const Page = () => {
             url: ""
         })
     }
+
+    function viewModal(data: Forms.IPasswordExtends) {
+        setIsViewModalOpen(true);
+        setViewData(data);
+    }
+
+    function formatDate(dateString: string, currentDate: Date): string {
+        const now = currentDate;
+        const date = new Date(dateString);
+        const diffInSeconds = Math.floor((now.getTime() - date.getTime()) / 1000);
+        
+        if (diffInSeconds <= 60) {
+            return `Created ${diffInSeconds} second${diffInSeconds !== 1 ? 's' : ''} ago`;
+        }
+        
+        const diffInMinutes = Math.floor(diffInSeconds / 60);
+        if (diffInMinutes <= 60) {
+            return `Created ${diffInMinutes} minute${diffInMinutes !== 1 ? 's' : ''} ago`;
+        }
+        
+        const diffInHours = Math.floor(diffInMinutes / 60);
+        if (diffInHours < 24) {
+            return `Created ${diffInHours} hour${diffInHours !== 1 ? 's' : ''} ago`;
+        }
+        
+        const diffInDays = Math.floor(diffInHours / 24);
+        if (diffInDays < 7) {
+            return `Created ${diffInDays} day${diffInDays !== 1 ? 's' : ''} ago`;
+        }
+        
+        const diffInWeeks = Math.floor(diffInDays / 7);
+        if (diffInWeeks < 4) {
+            return `Created ${diffInWeeks} week${diffInWeeks !== 1 ? 's' : ''} ago`;
+        }
+        
+        const diffInMonths = Math.floor(diffInWeeks / 4);
+        return `Created ${diffInMonths} month${diffInMonths !== 1 ? 's' : ''} ago`;
+    }
+
+    function triggerDelete(data: Forms.IPasswords) {
+        const currentData = data;
+        Swal.fire({
+            title: 'Are you sure?',
+            text: "You won't be able to revert this!",
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonColor: '#3085d6',
+            cancelButtonColor: '#d33',
+            confirmButtonText: 'Yes, delete it!'
+        }).then(async (result) => {
+            if(result.isConfirmed) {
+                setIsLoading(true);
+                const response = await fetch(`${window.location.origin}/api/passwords/${currentData._id}`, {
+                    method: "DELETE"
+                });
+                setIsLoading(false);
+                if(response.ok) {
+                    const result = await response.json() as {
+                        code: number,
+                        message: string
+                    }
+                    if(result.code == 200) {
+                        Swal.fire({
+                            toast: true,
+                            title: result.message,
+                            icon: "success",
+                            timer: 3000,
+                            position: 'top',
+                            showConfirmButton: false
+                        });
+                        getData();
+                    }
+                    else if(result.code == 500) {
+                        Swal.fire({
+                            toast: false,
+                            title: "Failed to delete password",
+                            icon: "error",
+                            showConfirmButton: true
+                        });
+                    }
+                    else {
+                        Swal.fire({
+                            toast: false,
+                            title: result.message,
+                            icon: "warning",
+                            showConfirmButton: true
+                        });
+                    }
+                }
+            }
+        })
+    }
+
+    function triggerEdit(data: Forms.IPasswords) {
+        setEditInitialValues({
+            url: data.url as string,
+            title: data.title,
+            user: data.user as string,
+            password: data.password as string,
+            itemTypeGroup: data.itemType as string
+        });
+        setEditId(data._id);
+        openEditModal();
+    }    
+
     useEffect(() => {
         getData();
+        setInterval(() => {
+            setCurrentDate(new Date());
+        }, 1000);
     }, [])
     return (
         <>
@@ -468,6 +580,120 @@ const Page = () => {
                     </Formik>
                 </div>
             </Modal>
+            
+            <Modal isOpen={isViewModalOpen} onClose={() => {
+                setIsViewModalOpen(false);
+            }} title="View Password" size="large" withSubmitBtn={false} submitBtnFunction={() => {}}>
+<div className="">
+                <div className="p-3">
+                    <h6 className="font-bold">Title</h6>
+                </div>
+                <div className="p-3">
+                    <h6>{viewData.title}</h6>
+                </div>
+            </div>
+            <div className="">
+                <div className="p-3">
+                    <h6 className="font-bold">Username</h6>
+                </div>
+                <div className="p-3">
+                    <h6 className="inline-block overflow-auto max-w-full">{viewData.user}</h6>
+                    <div className="mt-2">
+                        <div className="flex gap-2">
+                            <button className="bg-blue-500 hover:bg-blue-700 text-white px-3 py-2 rounded min-h-12" onClick={() => {
+                                const username = viewData.user;
+                                navigator.clipboard.writeText(username!).then(function() {
+                                    Swal.fire({
+                                        toast: true,
+                                        title: "Username copied to clipboard",
+                                        icon: "success",
+                                        timer: 3000,
+                                        position: 'top',
+                                        showConfirmButton: false
+                                    })
+                                })
+                            }}>
+                                <FontAwesomeIcon className="relative cursor-pointer text-gray" icon={FaSolid.faCopy} /> Copy
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div className="">
+                <div className="p-3">
+                    <h6 className="font-bold">Password</h6>
+                </div>
+                <div className="p-3">
+                    <span className="mr-2 overflow-auto max-w-full">{
+                        !viewData.passwordVisible ? "********" : viewData.password
+                    }</span>
+                    <div className="mt-2"> 
+                        <div className="flex gap-2">
+                            <button className="bg-blue-500 hover:bg-blue-700 text-white px-3 py-2 rounded min-h-12" onClick={() => {
+                                const password = viewData.password;
+                                navigator.clipboard.writeText(password!).then(function() {
+                                    Swal.fire({
+                                        toast: true,
+                                        title: "Password copied to clipboard",
+                                        icon: "success",
+                                        timer: 3000,
+                                        position: 'top',
+                                        showConfirmButton: false
+                                    })
+                                })
+                            }}>
+                                <FontAwesomeIcon className="relative cursor-pointer text-gray" icon={FaSolid.faCopy} /> Copy
+                            </button>
+                            <button className={!viewData.passwordVisible ? "bg-green-500 hover:bg-green-700 text-white px-3 py-2 rounded min-h-12" : "bg-red-500 hover:bg-red-700 text-white px-3 py-2 rounded min-h-12"} onClick={() => {
+                                const currentData = [...passwordData]
+                                currentData[viewIndex].passwordVisible = !currentData[viewIndex].passwordVisible;
+                                setPasswordData([...currentData]);
+                            }}>
+                                {
+                                    !viewData.passwordVisible ? <><FontAwesomeIcon className="relative cursor-pointer text-gray" icon={FaSolid.faEye} /> <span>See</span></> : <><FontAwesomeIcon className="relative cursor-pointer text-gray" icon={FaSolid.faEyeSlash} /> <span>Hide</span></>
+                                }
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            {
+                viewData.itemType == 'website' ? <div className="">
+                    <div className="p-3">
+                        <h6 className="font-bold mb-0">URL</h6>
+                    </div>
+                    <div className="p-3">
+                        <h6 className="inline-block overflow-auto max-w-full mt-0">{viewData.url}</h6>
+                        <div className="mt-2">
+                            <div className="flex gap-2">
+                                <button className="bg-blue-500 hover:bg-blue-700 text-white px-3 py-2 rounded" onClick={() => {
+                                    const url = viewData.url;
+                                    navigator.clipboard.writeText(url!).then(function() {
+                                        Swal.fire({
+                                            toast: true,
+                                            title: "URL copied to clipboard",
+                                            icon: "success",
+                                            timer: 3000,
+                                            position: 'top',
+                                            showConfirmButton: false
+                                        })
+                                    })
+                                }}>
+                                    <FontAwesomeIcon className="relative cursor-pointer text-gray" icon={FaSolid.faCopy} /> Copy
+                                </button>
+                                <button className="bg-red-500 hover:bg-red-700 text-white px-3 py-2 rounded" onClick={() => {
+                                    const url = viewData.url;
+                                    window.open(url as string, '_blank');
+                                }}>
+                                    <FontAwesomeIcon className="relative cursor-pointer text-gray" icon={FaSolid.faGlobe} /> Open
+                                </button>
+                            </div>
+                        </div>
+                    </div> 
+                </div> : <></> 
+            }
+            </Modal>
+
             <Breadcrumb pageName="Passwords" />
             {
                 passwordData.length === 0 ? <div className="w-full max-w-full h-full rounded-sm border border-stroke bg-white shadow-default dark:border-strokedark dark:bg-boxdark flex justify-center px-2 py-5">
@@ -492,7 +718,94 @@ const Page = () => {
                             </div>
                         </div>
                     </div>
-                    <div className="grid grid-cols-1 md:grid-cols-1 lg:grid-cols-1 xl:grid-cols-2 gap-1">
+                    <div>
+                        {
+                            passwordData.map((password, index) => {
+                                return password.title.toLowerCase().includes(searchValue.toLowerCase()) || searchValue == "" ?  <React.Fragment key={password._id}>
+                                    <div className="flex justify-between">
+                                        <div className="flex gap-3">
+                                            <div className="py-3">
+                                                <span>
+                                                    <FontAwesomeIcon icon={FaSolid.faKey} className="text-5xl text-orange-500" />
+                                                </span>
+                                            </div>
+                                            <div className="mt-2 ml-5">
+                                                <h4 className="text-2xl">
+                                                    {password.title}
+                                                </h4>
+                                                <h4 className="text-sm">
+                                                    {
+                                                        formatDate(password.created_at.toString(), currentDate as Date)
+                                                    }
+                                                </h4>
+                                            </div>
+                                        </div>
+                                        <div className="md:flex md:gap-2 lg:align-middle hidden">
+                                            <div className="mt-3">
+                                                <button className="bg-green-500 px-3 py-2 rounded-lg w-full" onClick={() => {
+                                                    triggerEdit(password);
+                                                }}>
+                                                    <span>
+                                                        <FontAwesomeIcon icon={FaSolid.faPencilAlt} className="text-white" />
+                                                    </span>
+                                                </button>
+                                            </div>
+                                            <div className="mt-3">
+                                                <button className="bg-blue-500 px-3 py-2 rounded-lg w-full" onClick={() => {
+                                                    setViewIndex(index);
+                                                    viewModal(password);
+                                                }}>
+                                                    <span>
+                                                        <FontAwesomeIcon icon={FaSolid.faEye} className="text-white" />
+                                                    </span>
+                                                </button>
+                                            </div>
+                                            <div className="mt-3">
+                                                <button className="bg-red-500 px-3 py-2 rounded-lg w-full" onClick={() => {
+                                                    triggerDelete(password);
+                                                }}>
+                                                    <span>
+                                                        <FontAwesomeIcon icon={FaSolid.faTrash} className="text-white" />
+                                                    </span>
+                                                </button>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div className="flex gap-2 align-middle md:hidden justify-end">
+                                        <div className="mt-3">
+                                            <button className="bg-green-500 px-3 py-2 rounded-lg w-full" onClick={() => {
+                                                triggerEdit(password);
+                                            }}>
+                                                <span>
+                                                    <FontAwesomeIcon icon={FaSolid.faPencilAlt} className="text-white" />
+                                                </span>
+                                            </button>
+                                        </div>
+                                        <div className="mt-3">
+                                            <button className="bg-blue-500 px-3 py-2 rounded-lg w-full" onClick={() => {
+                                                setViewIndex(index);
+                                                viewModal(password);
+                                            }}>
+                                                <span>
+                                                    <FontAwesomeIcon icon={FaSolid.faEye} className="text-white" />
+                                                </span>
+                                            </button>
+                                        </div>
+                                        <div className="mt-3">
+                                            <button className="bg-red-500 px-3 py-2 rounded-lg w-full" onClick={() => {
+                                                triggerDelete(password);
+                                            }}>
+                                                <span>
+                                                    <FontAwesomeIcon icon={FaSolid.faTrash} className="text-white" />
+                                                </span>
+                                            </button>
+                                        </div>
+                                    </div>
+                                </React.Fragment> : <React.Fragment key={password._id}></React.Fragment>
+                            })
+                        }
+                    </div>
+                    {/* <div className="grid grid-cols-1 md:grid-cols-1 lg:grid-cols-1 xl:grid-cols-2 gap-1">
                         {  
                             passwordData.map((data, index) => {
                                 return data.title.toLowerCase().includes(searchValue.toLowerCase()) || searchValue == "" ? 
@@ -680,7 +993,7 @@ const Page = () => {
                                 </div> : <React.Fragment key={data._id as string}></React.Fragment>
                             })
                         }
-                    </div>
+                    </div> */}
                 </div>
             }
         </>

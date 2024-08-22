@@ -23,6 +23,8 @@ const Modal: React.FC<ModalProps> = ({ isOpen, onClose, title, size, children, w
         modalSizeClass = "bg-black rounded-lg py-5 px-6 w-96";
     }
 
+    modalSizeClass += " w-full mt-12";
+
     useEffect(() => {
         if(isOpen) {
             setTimeout(() => {
@@ -33,7 +35,7 @@ const Modal: React.FC<ModalProps> = ({ isOpen, onClose, title, size, children, w
 
     return (
         <>
-            <div className={!isOpen? "fixed h-full top-0 left-0 w-full bg-black bg-opacity-50 z-99999 hidden" : "fixed h-full flex justify-center px-5 top-0 left-0 w-full bg-black bg-opacity-50 z-99999 overflow-auto py-10"}>
+            <div className={!isOpen? "fixed h-full top-0 left-0 w-full bg-black bg-opacity-50 z-99999 hidden" : "fixed h-full flex justify-center px-3 top-0 left-0 w-full bg-black bg-opacity-50 z-99999 overflow-auto py-10"}>
                 <div className='inset-0'>
                     <div className={isOpen ? `${modalSizeClass} zoom-in` : modalSizeClass} ref={modalDivRef}>
                         {/* HEAD */}
