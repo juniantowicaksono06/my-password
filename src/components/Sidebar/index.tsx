@@ -157,7 +157,7 @@ const Sidebar = ({ sidebarOpen, setSidebarOpen }: SidebarProps) => {
                     router.push(item.link);
                   }
                   setWindowPathname(item.link);
-                }} className={item.link === windowPathname ? 'group relative flex items-center gap-2.5 rounded-sm py-3 px-4 font-medium text-white duration-300 ease-in-out bg-blue-500' : 'group relative flex items-center gap-2.5 rounded-sm py-3 px-4 font-medium text-bodydark2 duration-300 ease-in-out hover:bg-graydark dark:hover:bg-meta-4'}>
+                }} className={item.link === windowPathname ? 'w-full group relative flex items-center gap-2.5 rounded-sm py-3 px-4 font-medium text-white duration-300 ease-in-out bg-blue-500' : 'w-full group relative flex items-center gap-2.5 rounded-sm py-3 px-4 font-medium text-bodydark2 duration-300 ease-in-out hover:bg-graydark dark:hover:bg-meta-4'}>
                   <span className='mr-3'>
                     <FontAwesomeIcon icon={icon} />
                   </span>
