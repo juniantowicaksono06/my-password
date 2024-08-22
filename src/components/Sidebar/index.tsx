@@ -118,8 +118,11 @@ const Sidebar = ({ sidebarOpen, setSidebarOpen }: SidebarProps) => {
               {menu.map((item, index) => {
                 const icon = FaSolid[item.icon as keyof typeof FaSolid] as FaSolid.IconDefinition;
                 return <li key={item._id.toString()}>
-                <Link href={item.link} prefetch={true} shallow={true} onClick={(e) => {
-                  // e.preventDefault();
+                <Link href={item.link} prefetch={true} shallow={false} onClick={(e) => {
+                  if(item.link == '/logout') {
+                    dispatch({type: 'startLoading'});
+                    window.location.href = '/logout';
+                  }
                   setWindowPathname(item.link);
                 }} className={item.link === windowPathname ? 'group relative flex items-center gap-2.5 rounded-sm py-3 px-4 font-medium text-white duration-300 ease-in-out bg-blue-500' : 'group relative flex items-center gap-2.5 rounded-sm py-3 px-4 font-medium text-bodydark2 duration-300 ease-in-out hover:bg-graydark dark:hover:bg-meta-4'}>
                   <span className='mr-3'>
