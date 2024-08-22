@@ -29,7 +29,6 @@ const forceLogout = (req: NextRequest, res: NextResponse) => {
     // });
     let cookieList = cookieStore.getAll()
     
-    console.log("deleting accessToken and refreshToken");
     cookieList.forEach(cookie => {
         if(cookie.name != "otpAccess") {
             response.cookies.delete(cookie.name)
