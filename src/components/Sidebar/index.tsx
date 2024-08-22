@@ -30,7 +30,6 @@ const Sidebar = ({ sidebarOpen, setSidebarOpen }: SidebarProps) => {
       const response = await fetch(`${window.location.origin}/api/menu`, {
         method: "GET"
       });
-      dispatch({type: 'stopLoading'});
       if(response.ok) {
         const result = await response.json() as {
           code: number,
@@ -39,10 +38,19 @@ const Sidebar = ({ sidebarOpen, setSidebarOpen }: SidebarProps) => {
         if(result.code == 200) {
           setMenu(result.data);
           result.data.forEach((value) => {
-            // console.log(value.link);
             router.prefetch(`${window.location.origin}/${value.link}`);
           });
+          dispatch({type: 'stopLoading'});
           setSidebarLoaded(true);
+        }
+        else {
+          dispatch({type: 'stopLoading'});
+          Swal.fire({
+            title: "Error",
+            text: "Something went wrong!",
+            icon: "error",
+            confirmButtonText: "Ok"
+          })
         }
       }
       else {
@@ -110,7 +118,9 @@ const Sidebar = ({ sidebarOpen, setSidebarOpen }: SidebarProps) => {
               {menu.map((item, index) => {
                 const icon = FaSolid[item.icon as keyof typeof FaSolid] as FaSolid.IconDefinition;
                 return <li key={item._id.toString()}>
-                <Link href={item.link} prefetch={true} shallow={true} onClick={(e) => {
+                <Link href={item.link} onClick={(e) => {
+                  e.preventDefault();
+                  router.push(item.link);
                   setWindowPathname(item.link);
                 }} className={item.link === windowPathname ? 'group relative flex items-center gap-2.5 rounded-sm py-3 px-4 font-medium text-white duration-300 ease-in-out bg-blue-500' : 'group relative flex items-center gap-2.5 rounded-sm py-3 px-4 font-medium text-bodydark2 duration-300 ease-in-out hover:bg-graydark dark:hover:bg-meta-4'}>
                   <span className='mr-3'>
