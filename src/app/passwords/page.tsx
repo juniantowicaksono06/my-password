@@ -725,7 +725,7 @@ const Page = () => {
                                     <div className="flex justify-between">
                                         <div className="flex gap-3">
                                             {
-                                                password.icon == "" || password.icon == undefined || password.icon == null ?
+                                                password.icon == "" || password.icon == undefined || password.icon == null || password.itemType == "app" ?
                                                 <div className="py-3">
                                                     <span>
                                                         <FontAwesomeIcon icon={FaSolid.faKey} className="text-5xl text-orange-500" />
