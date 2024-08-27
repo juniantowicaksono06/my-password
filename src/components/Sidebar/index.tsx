@@ -18,7 +18,6 @@ const Sidebar = ({ sidebarOpen, setSidebarOpen }: SidebarProps) => {
   const {state, dispatch} = useLoading();
   const pathname = usePathname();
   const {pageLoadingDispatch} = usePageLoading();
-  // const { pathname } = location;
 
   const trigger = useRef<any>(null);
   const sidebar = useRef<any>(null);
@@ -26,49 +25,51 @@ const Sidebar = ({ sidebarOpen, setSidebarOpen }: SidebarProps) => {
   const [windowPathname, setWindowPathname] = useState('');
   const router = useRouter();
   const getMenus = async() => {
-      dispatch({type: 'startLoading'});
-      const response = await fetch(`${window.location.origin}/api/menu`, {
-        method: "GET"
-      });
-      if(response.ok) {
-        const result = await response.json() as {
-          code: number,
-          data: AppType.IAppMenu[]
-        };
-        if(result.code == 200) {
-          setMenu(result.data);
-          await Promise.all(
-            result.data.map(async (value, index) => {
-              if(value.link != '/auth/logout') {
-                await new Promise((resolve) => {
-                  router.prefetch(value.link)
-                }) 
-              }
-              if(index == result.data.length - 1) {
-                dispatch({type: 'stopLoading'});
-              }
+    dispatch({type: 'startLoading'});
+    try {
+        const response = await fetch(`${window.location.origin}/api/menu`, {
+          method: "GET"
+        });
+        dispatch({type: 'stopLoading'});
+        if(response.ok) {
+          const result = await response.json() as {
+            code: number,
+            data: AppType.IAppMenu[]
+          };
+          if(result.code == 200) {
+            setMenu(result.data);
+            await Promise.all(
+              result.data.map(async (value, index) => {
+                if(value.link != '/auth/logout') {
+                  await new Promise((resolve) => {
+                    router.prefetch(value.link)
+                  }) 
+                }
+              })
+            )
+          }
+          else {
+            Swal.fire({
+              title: "Error",
+              text: "Something went wrong!",
+              icon: "error",
+              confirmButtonText: "Ok"
             })
-          )
+          }
         }
         else {
-          dispatch({type: 'stopLoading'});
           Swal.fire({
             title: "Error",
             text: "Something went wrong!",
             icon: "error",
             confirmButtonText: "Ok"
           })
+          return false;
         }
-      }
-      else {
-        Swal.fire({
-          title: "Error",
-          text: "Something went wrong!",
-          icon: "error",
-          confirmButtonText: "Ok"
-        })
-        return false;
-      }
+    }
+    catch(err) {
+      dispatch({type: 'stopLoading'});
+    }
       return true;
   }
   useEffect(() => {

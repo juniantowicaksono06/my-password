@@ -26,6 +26,11 @@ const PasswordsSchema = new Schema({
     password: {
         type: String,
         required: true
+    },
+    icon: {
+        type: String,
+        required: false,
+        optional: true
     }
 }, {
     timestamps: {

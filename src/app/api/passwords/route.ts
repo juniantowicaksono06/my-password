@@ -1,9 +1,9 @@
 // import { ConnectDB, passwordsCollection } from "@/src/database";
 import { NextRequest, NextResponse } from "next/server";
 import Joi from "@hapi/joi";
-import { encryptStringV2, decryptStringV2 } from "@/src/shared/function";
+import { decryptStringV2, getDomainOrSubdomain } from "@/src/shared/function";
 import Database from "@/src/database/database";
-import Forge, { md } from 'node-forge';
+import Forge from 'node-forge';
 
 export async function GET(req: Request, res: Response) {
     try {
@@ -16,7 +16,7 @@ export async function GET(req: Request, res: Response) {
         const { passwordsCollection, userCollection } = dbMain.getModels();
         const myPasswords = await passwordsCollection!.find({
             userID: userData.userID
-        }).select('_id userID title user url itemType password created_at updated_at');
+        }).select('_id userID title user url itemType password created_at updated_at icon');
         var data: Forms.IPasswordExtends[] = [];
 
         
@@ -70,7 +70,8 @@ export async function GET(req: Request, res: Response) {
                 itemType: password['itemType'],
                 created_at: password['created_at'],
                 updated_at: password['updated_at'],
-                passwordVisible: false
+                passwordVisible: false,
+                icon: password['icon']
             });
         });
 
@@ -172,6 +173,19 @@ export async function POST(req: NextRequest, res: NextResponse) {
             md: Forge.md.sha256.create()
         });
         const encryptedB64 = String(Forge.util.encode64(encryptedPassword));
+        var icon = "";
+        
+        try {
+            const domain = getDomainOrSubdomain(data['url'] as string);
+            if(domain !== false) {
+                const response = await fetch(`https://logo.clearbit.com/${domain}`);
+                if(response.ok) {
+                    icon = `https://logo.clearbit.com/${domain}`;
+                }
+            }
+        } catch (error) {
+            icon = "";
+        }
 
         const passwordItem = new passwordsCollection!({
             title: data['title'],
@@ -179,8 +193,8 @@ export async function POST(req: NextRequest, res: NextResponse) {
             url: data['url'],
             itemType: data['itemType'],
             password: encryptedB64,
-            // password: await encryptStringV2(`${process.env.SALT_KEY}_${data['password'] as string}`, `${publicKeyDecryted}`),
-            userID: userData.userID
+            userID: userData.userID,
+            icon: icon
         });
         const passwordSave = await passwordItem.save();
 

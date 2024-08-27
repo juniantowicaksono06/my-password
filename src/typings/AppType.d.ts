@@ -5,6 +5,7 @@ namespace AppType {
         name: string;
         icon: string;
         link: string;
+        order: number;
         active: string;
     }
 }

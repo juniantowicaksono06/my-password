@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { encryptStringV2, decryptStringV2 } from "@/src/shared/function";
+import { encryptStringV2, decryptStringV2, getDomainOrSubdomain } from "@/src/shared/function";
 import Joi from "@hapi/joi";
 import Database from "@/src/database/database";
 import Forge from 'node-forge';
@@ -128,6 +128,21 @@ export async function PUT(req: NextRequest, res: NextResponse) {
             md: Forge.md.sha256.create()
         });
         const encryptedB64 = String(Forge.util.encode64(encryptedPassword));
+        var icon = "";
+        
+        
+        try {
+            const domain = getDomainOrSubdomain(data['url'] as string);
+            if(domain !== false) {
+                const response = await fetch(`https://logo.clearbit.com/${domain}`);
+                if(response.ok) {
+                    icon = `https://logo.clearbit.com/${domain}`;
+                }
+            }
+        }
+        catch(error) {
+            icon = "";
+        }
 
         await passwordsCollection!.findByIdAndUpdate(id, {
             title: data['title'],
@@ -135,7 +150,8 @@ export async function PUT(req: NextRequest, res: NextResponse) {
             url: data['url'],
             itemType: data['itemType'],
             password: encryptedB64,
-            userID: userData.userID
+            userID: userData.userID,
+            icon: icon
         });
         return Response.json({
             code: 200,

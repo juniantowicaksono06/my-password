@@ -209,7 +209,7 @@ const Page = () => {
     return (
         <>
             <Loading isLoading={isLoading} />
-            <Modal isOpen={isModalOpen} onClose={closeModal} title="Add Password" withSubmitBtn={false} submitBtnFunction={() => {}} size="large">
+            <Modal isOpen={isModalOpen} onClose={closeModal} title="Add Password" withSubmitBtn={false} submitBtnFunction={() => {}} size="small">
                 <div className="w-full">
                     <Formik
                         enableReinitialize
@@ -398,7 +398,7 @@ const Page = () => {
                 </div>
             </Modal>
             
-            <Modal isOpen={isEditModalOpen} onClose={closeEditModal} title="Edit Password" withSubmitBtn={false} submitBtnFunction={() => {}} size="large">
+            <Modal isOpen={isEditModalOpen} onClose={closeEditModal} title="Edit Password" withSubmitBtn={false} submitBtnFunction={() => {}} size="small">
                 <div className="w-full">
                     <Formik
                         enableReinitialize
@@ -583,7 +583,7 @@ const Page = () => {
             
             <Modal isOpen={isViewModalOpen} onClose={() => {
                 setIsViewModalOpen(false);
-            }} title="View Password" size="large" withSubmitBtn={false} submitBtnFunction={() => {}}>
+            }} title="View Password" size="small" withSubmitBtn={false} submitBtnFunction={() => {}}>
 <div className="">
                 <div className="p-3">
                     <h6 className="font-bold">Title</h6>
@@ -724,11 +724,16 @@ const Page = () => {
                                 return password.title.toLowerCase().includes(searchValue.toLowerCase()) || searchValue == "" ?  <React.Fragment key={password._id}>
                                     <div className="flex justify-between">
                                         <div className="flex gap-3">
-                                            <div className="py-3">
-                                                <span>
-                                                    <FontAwesomeIcon icon={FaSolid.faKey} className="text-5xl text-orange-500" />
-                                                </span>
-                                            </div>
+                                            {
+                                                password.icon == "" || password.icon == undefined || password.icon == null ?
+                                                <div className="py-3">
+                                                    <span>
+                                                        <FontAwesomeIcon icon={FaSolid.faKey} className="text-5xl text-orange-500" />
+                                                    </span>
+                                                </div> : <div className="py-3">
+                                                    <img src={`${window.location.origin}/api/icons?url=${password.icon}`} alt="Icon Password" className="w-10 rounded-full" />
+                                                </div>
+                                            }
                                             <div className="mt-2 ml-5">
                                                 <h4 className="text-2xl">
                                                     {password.title}

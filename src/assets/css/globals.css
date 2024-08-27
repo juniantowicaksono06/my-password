@@ -248,10 +248,10 @@ span.flatpickr-weekday,
 }
 
 .zoom-in {
-  transform: scale(0);
-  transition: transform 0.05s ease-in-out;
+  transform: scale(0) translateX(-50%) !important;
+  transition: transform 0.1s ease-in-out;
 }
 
 .zoom-in.show {
-  transform: scale(1);
+  transform: scale(1) translateX(-50%) !important;
 }

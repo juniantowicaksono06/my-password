@@ -162,3 +162,19 @@ export function generateReadablePassword() {
 export function generateOTP() {
     return faker.datatype.number({ min: 199999, max: 999999 });
 }
+
+
+/**
+ * Retrieves the domain or subdomain from a given URL.
+ *
+ * @param {string} url - The URL from which to extract the domain or subdomain.
+ * @return {string|boolean} The extracted domain or subdomain, or false if the URL is invalid.
+ */
+export function getDomainOrSubdomain(url: string) {
+  try {
+      const hostname = new URL(url).hostname;
+      return hostname;
+  } catch (error) {
+      return false;
+  }
+}

@@ -6,7 +6,7 @@ export async function GET(req: Request, res: Response) {
         const dbMain = new Database('main');
         dbMain.initModel();
         const { appMenuCollection } = dbMain.getModels();
-        const result = await appMenuCollection!.find();
+        const result = await appMenuCollection!.find().sort({order: 1});
 
         return Response.json({
             code: 200,

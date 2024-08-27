@@ -23,6 +23,7 @@ namespace Database {
         name: string;
         icon: string;
         link: string;
+        order: number;
         active: boolean;
     }
     interface IPasswords {
@@ -32,6 +33,7 @@ namespace Database {
         url?: string | null | undefined;
         itemType?: string | null | undefined;
         password?: string | null | undefined;
+        icon?: string;
         created_at: Date;
         updated_at: Date;
     }

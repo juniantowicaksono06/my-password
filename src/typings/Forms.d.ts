@@ -20,6 +20,7 @@ namespace Forms {
         url?: string | null | undefined;
         itemType?: string | null | undefined;
         password?: string | null | undefined;
+        icon?: string;
         created_at: Date;
         updated_at: Date;
     }
